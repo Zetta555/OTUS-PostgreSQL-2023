@@ -32,3 +32,109 @@ zetta55@ubuntu-vm1:~$
 ```
 
 </details>
+<details><summary>добавить свой ssh ключ в metadata ВМ</summary>
+
+генерируем пару ключей, забрасываем публичный ключ на сервер, подключаемся к серверу.
+
+</details>
+
+<details><summary>зайти удаленным ssh (первая сессия), не забывайте про ssh-add</summary>
+  
+  ```shell
+zetta55@ubuntu-vm1:~$ who
+zetta55  :0           2023-04-09 17:37 (:0) #локальная сессия
+zetta55  pts/2        2023-04-09 23:14 (172.16.0.125) #подключение по SSH
+```
+</details>
+
+<details><summary>поставить PostgreSQL</summary>
+  
+  ```shell
+zetta55@ubuntu-vm1:~$ sudo apt update && sudo apt upgrade -y && sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - && sudo apt-get update && sudo apt-get -y install postgresql-15
+  
+установлен пакет postgresql-15 самой новой версии (15.2-1.pgdg22.04+1)
+  
+zetta55@ubuntu-vm1:~$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+15  main    5432 online postgres /var/lib/postgresql/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm1:~$
+
+```
+</details>
+
+<details><summary>зайти вторым ssh (вторая сессия)</summary>
+  
+```shell
+zetta55@ubuntu-vm1:~$ who
+zetta55  :0           2023-04-09 17:37 (:0)
+zetta55  pts/2        2023-04-09 23:22 (172.16.0.125)
+zetta55  pts/3        2023-04-09 23:26 (172.16.0.125) #вторая SSH-сессия
+zetta55@ubuntu-vm1:~$
+```
+</details>
+
+<details><summary>запустить везде psql из под пользователя postgres</summary>
+</details>
+
+<details><summary>выключить auto commit</summary>
+</details>
+
+<details><summary>сделать в первой сессии новую таблицу и наполнить ее данными create table persons(id serial, first_name text, second_name text); insert into persons(first_name, second_name) values('ivan', 'ivanov'); insert into persons(first_name, second_name) values('petr', 'petrov'); commit;</summary>
+</details>
+
+<details><summary>посмотреть текущий уровень изоляции: show transaction isolation level</summary>
+</details>
+
+<details><summary>начать новую транзакцию в обоих сессиях с дефолтным (не меняя) уровнем изоляции</summary>
+</details>
+
+<details><summary>в первой сессии добавить новую запись insert into persons(first_name, second_name) values('sergey', 'sergeev');</summary>
+</details>
+
+<details><summary>сделать select * from persons во второй сессии</summary>
+</details>
+
+<details><summary>видите ли вы новую запись и если да то почему?</summary>
+</details>
+
+<details><summary>завершить первую транзакцию - commit;</summary>
+</details>
+
+<details><summary>сделать select * from persons во второй сессии</summary>
+</details>
+
+<details><summary>видите ли вы новую запись и если да то почему?</summary>
+</details>
+
+<details><summary>завершите транзакцию во второй сессии</summary>
+</details>
+
+<details><summary>начать новые но уже repeatable read транзации - set transaction isolation level repeatable read;</summary>
+</details>
+
+<details><summary>в первой сессии добавить новую запись insert into persons(first_name, second_name) values('sveta', 'svetova');</summary>
+</details>
+
+<details><summary>сделать select * from persons во второй сессии</summary>
+</details>
+
+<details><summary>видите ли вы новую запись и если да то почему?</summary>
+</details>
+
+<details><summary>завершить первую транзакцию - commit;</summary>
+</details>
+
+<details><summary>сделать select * from persons во второй сессии</summary>
+</details>
+
+<details><summary>видите ли вы новую запись и если да то почему?</summary>
+</details>
+
+<details><summary>завершить вторую транзакцию</summary>
+</details>
+
+<details><summary>сделать select * from persons во второй сессии</summary>
+</details>
+
+<details><summary>видите ли вы новую запись и если да то почему?</summary>
+</details>
