@@ -74,9 +74,103 @@ zetta55@ubuntu-vm1:~$
 </details>
 
 <details><summary>запустить везде psql из под пользователя postgres</summary>
+
+Для дальнейших манипуляций буду использовать postgresql-14
+```shell
+zetta55@ubuntu-vm1:~$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+15  main    5432 online postgres /var/lib/postgresql/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm1:~$ sudo pg_ctlcluster 15 main stop
+zetta55@ubuntu-vm1:~$ sudo pg_dropcluster 15 main
+zetta55@ubuntu-vm1:~$ pg_lsclusters
+Ver Cluster Port Status Owner Data directory Log file
+zetta55@ubuntu-vm1:~$ sudo -u postgres pg_createcluster 14 main
+Error: no initdb program for version 14 found
+zetta55@ubuntu-vm1:~$ sudo apt update && sudo apt upgrade -y && sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - && sudo apt-get update && sudo apt-get -y install postgresql-14
+  
+...
+  
+zetta55@ubuntu-vm1:~$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+14  main    5432 online postgres /var/lib/postgresql/14/main /var/log/postgresql/postgresql-14-main.log
+zetta55@ubuntu-vm1:~$
+zetta55@ubuntu-vm1:~$ pg_ctlcluster 14 main start
+Warning: the cluster will not be running as a systemd service. Consider using systemctl:
+  sudo systemctl start postgresql@14-main
+Error: You must run this program as the cluster owner (postgres) or root
+zetta55@ubuntu-vm1:~$ sudo systemctl start postgresql@14-main
+zetta55@ubuntu-vm1:~$ pg_ctlcluster 14 main start
+Warning: the cluster will not be running as a systemd service. Consider using systemctl:
+  sudo systemctl start postgresql@14-main
+Error: You must run this program as the cluster owner (postgres) or root
+zetta55@ubuntu-vm1:~$ sudo -u postgres pg_ctlcluster 14 main start
+Warning: the cluster will not be running as a systemd service. Consider using systemctl:
+  sudo systemctl start postgresql@14-main
+Cluster is already running.
+zetta55@ubuntu-vm1:~$
+
+
+```
+
+в каждой ssh-сессии делаю:
+```shell
+zetta55@ubuntu-vm1:~$ sudo -u postgres psql
+[sudo] пароль для zetta55:
+could not change directory to "/home/zetta55": Отказано в доступе
+psql (15.2 (Ubuntu 15.2-1.pgdg22.04+1), server 14.7 (Ubuntu 14.7-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=#
+```
 </details>
 
 <details><summary>выключить auto commit</summary>
+  
+Создаю базу iso и отключаю auto commit  
+```shell
+postgres=# CREATE DATABASE iso;
+CREATE DATABASE
+postgres=# \c iso
+psql (15.2 (Ubuntu 15.2-1.pgdg22.04+1), server 14.7 (Ubuntu 14.7-1.pgdg22.04+1))
+You are now connected to database "iso" as user "postgres".
+iso=# \l
+                                                 List of databases
+   Name    |  Owner   | Encoding |   Collate   |    Ctype    | ICU Locale | Locale Provider |   Access privileges
+-----------+----------+----------+-------------+-------------+------------+-----------------+-----------------------
+ iso       | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            |
+ postgres  | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            |
+ template0 | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            | =c/postgres          +
+           |          |          |             |             |            |                 | postgres=CTc/postgres
+ template1 | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            | =c/postgres          +
+           |          |          |             |             |            |                 | postgres=CTc/postgres
+(4 rows)
+
+iso=# SELECT current_database();
+ current_database
+------------------
+ iso
+(1 row)
+
+iso=# CREATE TABLE test (i serial, amount int);
+CREATE TABLE
+iso=# INSERT INTO test(amount) VALUES (100);
+INSERT 0 1
+iso=# INSERT INTO test(amount) VALUES (500);
+INSERT 0 1
+iso=# SELECT * FROM test;
+ i | amount
+---+--------
+ 1 |    100
+ 2 |    500
+(2 rows)
+
+iso=# \echo :AUTOCOMMIT
+on
+iso=# \set AUTOCOMMIT OFF
+iso=# \echo :AUTOCOMMIT
+OFF
+iso=#
+```
 </details>
 
 <details><summary>сделать в первой сессии новую таблицу и наполнить ее данными create table persons(id serial, first_name text, second_name text); insert into persons(first_name, second_name) values('ivan', 'ivanov'); insert into persons(first_name, second_name) values('petr', 'petrov'); commit;</summary>
