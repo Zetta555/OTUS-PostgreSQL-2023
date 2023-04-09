@@ -183,27 +183,81 @@ postgres=#
 </details>
 
 <details><summary>начать новую транзакцию в обоих сессиях с дефолтным (не меняя) уровнем изоляции</summary>
+  
+в каждой ssh-сессии делаю:
+```shell
+postgres=# BEGIN;
+BEGIN
+```
 </details>
 
 <details><summary>в первой сессии добавить новую запись insert into persons(first_name, second_name) values('sergey', 'sergeev');</summary>
+
+в первой сессии
+```shell
+postgres=*# insert into persons(first_name, second_name) values('sergey', 'sergeev');
+INSERT 0 1
+postgres=*#
+```
 </details>
 
 <details><summary>сделать select * from persons во второй сессии</summary>
+
+во второй сессии
+```shell
+postgres=*#  SELECT * FROM persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+(2 rows)
+
+postgres=*#
+```
 </details>
 
 <details><summary>видите ли вы новую запись и если да то почему?</summary>
+
+  Новой записи не видно.
 </details>
 
 <details><summary>завершить первую транзакцию - commit;</summary>
+
+```shell
+postgres=*# COMMIT;
+COMMIT
+postgres=#
+```
 </details>
 
 <details><summary>сделать select * from persons во второй сессии</summary>
+
+```shell
+postgres=*#  SELECT * FROM persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+  3 | sergey     | sergeev
+(3 rows)
+postgres=*#
+```
 </details>
 
 <details><summary>видите ли вы новую запись и если да то почему?</summary>
+
+Да, новая запись теперь видна, т.к. она была зафиксирована commit-ом в первой сессии.
+По умолчанию в PostgreSQL уровень изоляции Read Committed. Такой уровень изоляции всегда позволяет видеть изменения внесённые успешно завершёнными транзакциями в оставшихся параллельно открытых транзакциях. В транзакции, работающей на этом уровне, запрос SELECT (без предложения FOR UPDATE/SHARE) видит только те данные, которые были зафиксированы до начала запроса; он никогда не увидит незафиксированных данных или изменений, внесённых в процессе выполнения запроса параллельными транзакциями. По сути запрос SELECT видит снимок базы данных в момент начала выполнения запроса. Однако SELECT видит результаты изменений, внесённых ранее в этой же транзакции, даже если они ещё не зафиксированы. Также заметьте, что два последовательных оператора SELECT могут видеть разные данные даже в рамках одной транзакции, если какие-то другие транзакции зафиксируют изменения после выполнения первого SELECT.
 </details>
 
 <details><summary>завершите транзакцию во второй сессии</summary>
+  
+во второй сессии
+```shell
+postgres=*#  COMMIT;
+COMMIT
+postgres=#
+```
 </details>
 
 <details><summary>начать новые но уже repeatable read транзации - set transaction isolation level repeatable read;</summary>
