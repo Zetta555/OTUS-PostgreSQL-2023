@@ -126,57 +126,60 @@ postgres=#
 
 <details><summary>выключить auto commit</summary>
   
-Создаю базу iso и отключаю auto commit  
+Oтключаю auto commit  
 ```shell
-postgres=# CREATE DATABASE iso;
-CREATE DATABASE
-postgres=# \c iso
-psql (15.2 (Ubuntu 15.2-1.pgdg22.04+1), server 14.7 (Ubuntu 14.7-1.pgdg22.04+1))
-You are now connected to database "iso" as user "postgres".
-iso=# \l
-                                                 List of databases
-   Name    |  Owner   | Encoding |   Collate   |    Ctype    | ICU Locale | Locale Provider |   Access privileges
------------+----------+----------+-------------+-------------+------------+-----------------+-----------------------
- iso       | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            |
- postgres  | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            |
- template0 | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            | =c/postgres          +
-           |          |          |             |             |            |                 | postgres=CTc/postgres
- template1 | postgres | UTF8     | ru_RU.UTF-8 | ru_RU.UTF-8 |            | libc            | =c/postgres          +
-           |          |          |             |             |            |                 | postgres=CTc/postgres
-(4 rows)
-
-iso=# SELECT current_database();
- current_database
-------------------
- iso
-(1 row)
-
-iso=# CREATE TABLE test (i serial, amount int);
-CREATE TABLE
-iso=# INSERT INTO test(amount) VALUES (100);
-INSERT 0 1
-iso=# INSERT INTO test(amount) VALUES (500);
-INSERT 0 1
-iso=# SELECT * FROM test;
- i | amount
----+--------
- 1 |    100
- 2 |    500
-(2 rows)
-
-iso=# \echo :AUTOCOMMIT
+postgres=#  \echo :AUTOCOMMIT
 on
-iso=# \set AUTOCOMMIT OFF
-iso=# \echo :AUTOCOMMIT
+postgres=#  \set AUTOCOMMIT OFF
+postgres=#  \echo :AUTOCOMMIT
 OFF
-iso=#
+postgres=#
+
 ```
 </details>
 
 <details><summary>сделать в первой сессии новую таблицу и наполнить ее данными create table persons(id serial, first_name text, second_name text); insert into persons(first_name, second_name) values('ivan', 'ivanov'); insert into persons(first_name, second_name) values('petr', 'petrov'); commit;</summary>
+
+```shell
+postgres=# create table persons(id serial, first_name text, second_name text);
+CREATE TABLE
+postgres=# insert into persons(first_name, second_name) values('ivan', 'ivanov');
+INSERT 0 1
+postgres=# insert into persons(first_name, second_name) values('petr', 'petrov');
+INSERT 0 1
+postgres=# commit;
+ПРЕДУПРЕЖДЕНИЕ:  нет незавершённой транзакции
+COMMIT
+postgres=#  \dt+
+                                    List of relations
+ Schema |  Name   | Type  |  Owner   | Persistence | Access method | Size  | Description
+--------+---------+-------+----------+-------------+---------------+-------+-------------
+ public | persons | table | postgres | permanent   | heap          | 16 kB |
+(1 row)
+
+postgres=# SELECT * FROM persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+(2 rows)
+
+postgres=#
+
+```
 </details>
 
 <details><summary>посмотреть текущий уровень изоляции: show transaction isolation level</summary>
+
+```shell
+postgres=# show transaction isolation level;
+ transaction_isolation
+-----------------------
+ read committed
+(1 row)
+
+postgres=#
+```
 </details>
 
 <details><summary>начать новую транзакцию в обоих сессиях с дефолтным (не меняя) уровнем изоляции</summary>
