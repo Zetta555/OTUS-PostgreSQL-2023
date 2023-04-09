@@ -188,6 +188,7 @@ postgres=#
 ```shell
 postgres=# BEGIN;
 BEGIN
+postgres=*#
 ```
 </details>
 
@@ -261,6 +262,18 @@ postgres=#
 </details>
 
 <details><summary>начать новые но уже repeatable read транзации - set transaction isolation level repeatable read;</summary>
+
+```shell  
+postgres=# set transaction isolation level repeatable read;
+SET
+postgres=*#  show transaction isolation level;
+ transaction_isolation
+-----------------------
+ repeatable read
+(1 row)
+
+postgres=*#
+```
 </details>
 
 <details><summary>в первой сессии добавить новую запись insert into persons(first_name, second_name) values('sveta', 'svetova');</summary>
