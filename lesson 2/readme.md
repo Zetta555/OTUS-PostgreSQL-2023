@@ -277,28 +277,100 @@ postgres=*#
 </details>
 
 <details><summary>в первой сессии добавить новую запись insert into persons(first_name, second_name) values('sveta', 'svetova');</summary>
+
+```shell
+postgres=*# insert into persons(first_name, second_name) values('sveta', 'svetova');
+INSERT 0 1
+postgres=*#
+postgres=*# select * from persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+  3 | sergey     | sergeev
+  4 | sveta      | svetova
+(4 rows)
+postgres=*#
+```
 </details>
 
 <details><summary>сделать select * from persons во второй сессии</summary>
+
+```shell
+postgres=*# select * from persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+  3 | sergey     | sergeev
+(3 rows)
+
+postgres=*#
+```
 </details>
 
 <details><summary>видите ли вы новую запись и если да то почему?</summary>
+
+Нет, во второй сессии новой записи не видно.
+В режиме Repeatable Read видны только те данные, которые были зафиксированы ДО начала транзакции, но не видны незафиксированные данные и изменения, произведённые другими транзакциями в процессе выполнения данной транзакции.
 </details>
 
 <details><summary>завершить первую транзакцию - commit;</summary>
+
+```shell
+postgres=*# COMMIT;
+COMMIT
+postgres=#
+```
 </details>
 
 <details><summary>сделать select * from persons во второй сессии</summary>
+
+```shell
+postgres=*# select * from persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+  3 | sergey     | sergeev
+(3 rows)
+
+postgres=*#
+```
 </details>
 
 <details><summary>видите ли вы новую запись и если да то почему?</summary>
+Нет. Новая запись не будет видна, т.к. транзакция была начата ДО внесения изменений.
 </details>
 
 <details><summary>завершить вторую транзакцию</summary>
+
+```shell
+postgres=*# COMMIT;
+COMMIT
+postgres=#
+```
 </details>
 
 <details><summary>сделать select * from persons во второй сессии</summary>
+
+```shell
+postgres=*# COMMIT;
+COMMIT
+postgres=# select * from persons;
+ id | first_name | second_name
+----+------------+-------------
+  1 | ivan       | ivanov
+  2 | petr       | petrov
+  3 | sergey     | sergeev
+  4 | sveta      | svetova
+(4 rows)
+
+postgres=#
+```
 </details>
 
 <details><summary>видите ли вы новую запись и если да то почему?</summary>
+  
+Да, запись видна, т.к. запрос выполнен ПОСЛЕ коммита внесённых изменений. 
 </details>
