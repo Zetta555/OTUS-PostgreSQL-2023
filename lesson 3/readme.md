@@ -108,20 +108,140 @@ zetta55@ubuntu-vm1:~$
   </details>
 <details><summary>• развернуть контейнер с PostgreSQL 15 смонтировав в него /var/lib/postgresql</summary>
 
+  Предварительно создам docker-сеть: 
   ```shell  
-  
+zetta55@ubuntu-vm1:~$ docker network create pg-net
+28f583a590246ded271ef911e3d236b7092fdffdd13ebc16b7f579f9764baabf
+zetta55@ubuntu-vm1:~$
   ```
+  
+  Далее разворачиваю контейнер, подмонтировав в него локальный(с хоста) каталог /var/lib/postgresql
+  ```shell
+zetta55@ubuntu-vm1:~$ docker run --name pg-server --network pg-net -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -v /var/lib/postgres:/var/lib/postgresql/data postgres:15.2
+Unable to find image 'postgres:15.2' locally
+15.2: Pulling from library/postgres
+26c5c85e47da: Pull complete
+1c30a4c3f519: Pull complete
+d5c0f1ae682d: Pull complete
+1b1b2890ec0f: Pull complete
+391087799df7: Pull complete
+b413b4057e31: Pull complete
+4fa4edfeab8b: Pull complete
+b0a4d596bc61: Pull complete
+f6d73cd87199: Pull complete
+62b0bb33c69b: Pull complete
+bb0ddb7e7f1a: Pull complete
+583ec94d38ee: Pull complete
+efdf2a922e82: Pull complete
+Digest: sha256:6cc97262444f1c45171081bc5a1d4c28b883ea46a6e0d1a45a8eac4a7f4767ab
+Status: Downloaded newer image for postgres:15.2
+2ece1f883c820f3ebd1d4e8d826b0defce99ab3835aeb86cf2f52f9438c78154
+zetta55@ubuntu-vm1:~$ 
+  ```
+ 
+ Проверяю работу контейнера:
+ ```shell
+ zetta55@ubuntu-vm1:~$ docker ps
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS         PORTS                                       NAMES
+2ece1f883c82   postgres:15.2   "docker-entrypoint.s…"   10 seconds ago   Up 8 seconds   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp   pg-server
+zetta55@ubuntu-vm1:~$ 
+ ```
   </details>
 <details><summary>• развернуть контейнер с клиентом postgres</summary>
   
   ```shell  
-  
+zetta55@ubuntu-vm1:~$ docker run -it --rm --network pg-net --name pg-client postgres:15.2 psql -h pg-server -U postgres
+Password for user postgres:
+psql: error: connection to server at "pg-server" (172.19.0.2), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+zetta55@ubuntu-vm1:~$ docker run -it --rm --network pg-net --name pg-client postgres:15.2 psql -h pg-server -U postgres
+Password for user postgres:
+psql (15.2 (Debian 15.2-1.pgdg110+1))
+Type "help" for help.
+
+postgres=# SELECT version();
+                                                           version
+-----------------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 15.2 (Debian 15.2-1.pgdg110+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit
+(1 row)
+
+postgres=#   
   ```
   </details>
 <details><summary>• подключится из контейнера с клиентом к контейнеру с сервером и сделать таблицу с парой строк</summary>
-  
+
+  Проверяемся, что запущены два контейнера с сервером и клиентом:
   ```shell  
+zetta55@ubuntu-vm1:~$ docker ps -a
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS                                       NAMES
+90cdcdebdcd4   postgres:15.2   "docker-entrypoint.s…"   3 minutes ago    Up 3 minutes    5432/tcp                                    pg-client
+2ece1f883c82   postgres:15.2   "docker-entrypoint.s…"   11 minutes ago   Up 11 minutes   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp   pg-server
+zetta55@ubuntu-vm1:~$
   
+  ```
+  
+  Смотрю состав свеподнятого кластера postgresql в контейнере.
+  ```shell  
+  postgres=# SELECT * FROM pg_database;
+ oid |  datname  | datdba | encoding | datlocprovider | datistemplate | datallowconn | datconnlimit | datfrozenxid | datminmxid | dattablespace | datcollate |  datctype  | daticulocale | datcollversi
+on |               datacl
+-----+-----------+--------+----------+----------------+---------------+--------------+--------------+--------------+------------+---------------+------------+------------+--------------+-------------
+---+-------------------------------------
+   5 | postgres  |     10 |        6 | c              | f             | t            |           -1 |          717 |          1 |          1663 | en_US.utf8 | en_US.utf8 |              | 2.31
+   |
+   1 | template1 |     10 |        6 | c              | t             | t            |           -1 |          717 |          1 |          1663 | en_US.utf8 | en_US.utf8 |              | 2.31
+   | {=c/postgres,postgres=CTc/postgres}
+   4 | template0 |     10 |        6 | c              | t             | f            |           -1 |          717 |          1 |          1663 | en_US.utf8 | en_US.utf8 |              |
+   | {=c/postgres,postgres=CTc/postgres}
+(3 rows)
+
+postgres=#
+  ```
+  
+  Создаю таблицу, добавляю строки.
+  ```shell
+  
+postgres=# CREATE TABLE students (FirstName CHARACTER VARYING(30), LastName CHARACTER VARYING(30));
+CREATE TABLE
+postgres=# 
+postgres=# \dt
+          List of relations
+ Schema |   Name   | Type  |  Owner
+--------+----------+-------+----------
+ public | students | table | postgres
+(1 row)
+
+postgres=# \dt+
+                                     List of relations
+ Schema |   Name   | Type  |  Owner   | Persistence | Access method |  Size   | Description
+--------+----------+-------+----------+-------------+---------------+---------+-------------
+ public | students | table | postgres | permanent   | heap          | 0 bytes |
+(1 row)
+
+postgres=# \d students
+                      Table "public.students"
+  Column   |         Type          | Collation | Nullable | Default
+-----------+-----------------------+-----------+----------+---------
+ firstname | character varying(30) |           |          |
+ lastname  | character varying(30) |           |          |
+
+postgres=# INSERT INTO students VALUES ('Vasya', 'Pupkin');
+INSERT 0 1
+postgres=# SELECT * FROM students;
+ firstname | lastname
+-----------+----------
+ Vasya     | Pupkin
+(1 row)
+
+postgres=# INSERT INTO students VALUES ('Feodosij', 'Krynkin');
+INSERT 0 1
+postgres=# SELECT * FROM students;
+ firstname | lastname
+-----------+----------
+ Vasya     | Pupkin
+ Feodosij  | Krynkin
+(2 rows)
+
+postgres=#
   ```
   </details>
 <details><summary>• подключится к контейнеру с сервером с ноутбука/компьютера извне инстансов GCP/ЯО/места установки докера</summary>
