@@ -280,26 +280,50 @@ zetta55@ubuntu-vm1:~$
   ```
   </details>
 <details><summary>• создать его заново</summary>
-  
+
+  Создал новый контейнер с postgres, как видно ID контейнера изменился, в то же время docker-образ не вытягивался заново.
   ```shell  
-  
+zetta55@ubuntu-vm1:~$ docker run --name pg-server --network pg-net -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -v /var/lib/postgres:/var/lib/postgresql/data postgres:15.2
+c56281f66809e2c47aaabfda8d486f75ab50b794a391a3b6b6e73fbe7fed91f6
+zetta55@ubuntu-vm1:~$ docker ps -a
+CONTAINER ID   IMAGE           COMMAND                  CREATED         STATUS         PORTS                                       NAMES
+c56281f66809   postgres:15.2   "docker-entrypoint.s…"   7 seconds ago   Up 6 seconds   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp   pg-server
+zetta55@ubuntu-vm1:~$
   ```
   </details>
 <details><summary>• подключится снова из контейнера с клиентом к контейнеру с сервером</summary>
 
+  Подключаюсь:
   ```shell  
-  
+zetta55@ubuntu-vm1:~$ docker run -it --rm --network pg-net --name pg-client postgres:15.2 psql -h pg-server -U postgres
+Password for user postgres:
+psql (15.2 (Debian 15.2-1.pgdg110+1))
+Type "help" for help.
+
+postgres=# \dt+
+                                       List of relations
+ Schema |   Name   | Type  |  Owner   | Persistence | Access method |    Size    | Description
+--------+----------+-------+----------+-------------+---------------+------------+-------------
+ public | students | table | postgres | permanent   | heap          | 8192 bytes |
+(1 row)  
   ```
   </details>
 <details><summary>• проверить, что данные остались на месте</summary>
 
+  Как видно, данные на месте.
   ```shell  
-  
+postgres=# SELECT * FROM students;
+ firstname | lastname
+-----------+----------
+ Vasya     | Pupkin
+ Feodosij  | Krynkin
+(2 rows)
+
+postgres=#
+
   ```
   </details>
 <details><summary>• оставляйте в ЛК ДЗ комментарии что и как вы делали и как боролись с проблемами</summary>
 
-  ```shell  
-  
-  ```
+В данной задании расмотрен типичный кейс развёртывания postgresql в контейнере, где данные сепарированы от СУБД, что потенциально обеспечивает их целостность в случае краша самой СУБД и позволяет оперативно восстановить работу, пересоздав контейнер с сервером.
   </details>
