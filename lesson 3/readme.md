@@ -246,15 +246,37 @@ postgres=#
   </details>
 <details><summary>• подключится к контейнеру с сервером с ноутбука/компьютера извне инстансов GCP/ЯО/места установки докера</summary>
   
-  Скачиваю [DBeaver](https://dbeaver.io/download/)
-  ```shell  
+  Скачиваю [DBeaver](https://dbeaver.io/download/), устанавливаю на рабочую станцию:
   
-  ```
+  <p align="center">
+  <image src="/lesson 3/about_DBeaver.png">
+  </p>
+
+  подключаюсь к кластеру postgresql:
+  <p align="center">
+  <image src="/lesson 3/DBeaver_connect2db.png ">
+  </p>
   </details>
 <details><summary>• удалить контейнер с сервером</summary>
   
-  ```shell  
+  Выхожу из контейнера с клиентом postgres, останавливаю контейнер с сервером, удаляю контейнер с сервером:
   
+  ```shell  
+postgres=# \q
+zetta55@ubuntu-vm1:~$ docker ps
+CONTAINER ID   IMAGE           COMMAND                  CREATED             STATUS             PORTS                                       NAMES
+2ece1f883c82   postgres:15.2   "docker-entrypoint.s…"   About an hour ago   Up About an hour   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp   pg-server
+zetta55@ubuntu-vm1:~$ docker stop pg-server
+pg-server
+zetta55@ubuntu-vm1:~$ docker ps -a
+CONTAINER ID   IMAGE           COMMAND                  CREATED             STATUS                      PORTS     NAMES
+2ece1f883c82   postgres:15.2   "docker-entrypoint.s…"   About an hour ago   Exited (0) 37 seconds ago             pg-server
+zetta55@ubuntu-vm1:~$ docker rm 2ece1f883c82
+2ece1f883c82
+zetta55@ubuntu-vm1:~$ docker ps -a
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+zetta55@ubuntu-vm1:~$
+
   ```
   </details>
 <details><summary>• создать его заново</summary>
