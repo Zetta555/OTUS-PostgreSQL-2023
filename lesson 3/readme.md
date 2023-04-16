@@ -179,7 +179,7 @@ zetta55@ubuntu-vm1:~$
   
   ```
   
-  Смотрю состав свеподнятого кластера postgresql в контейнере.
+  Смотрю состав свежеподнятого кластера postgresql в контейнере.
   ```shell  
   postgres=# SELECT * FROM pg_database;
  oid |  datname  | datdba | encoding | datlocprovider | datistemplate | datallowconn | datconnlimit | datfrozenxid | datminmxid | dattablespace | datcollate |  datctype  | daticulocale | datcollversi
@@ -246,6 +246,7 @@ postgres=#
   </details>
 <details><summary>• подключится к контейнеру с сервером с ноутбука/компьютера извне инстансов GCP/ЯО/места установки докера</summary>
   
+  Скачиваю [DBeaver](https://dbeaver.io/download/)
   ```shell  
   
   ```
