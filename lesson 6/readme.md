@@ -114,8 +114,46 @@ zetta55@ubuntu-vm1:~$
 
 <details><summary>• создайте новый диск к ВМ размером 10GB</summary>
 
+  Исходное состояние дисковой подсистемы VM
 ```shell
+  zetta55@ubuntu-vm1:~$ sudo lsblk
+NAME                MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0                 7:0    0     4K  1 loop /snap/bare/5
+loop1                 7:1    0  63,3M  1 loop /snap/core20/1822
+loop2                 7:2    0  63,3M  1 loop /snap/core20/1852
+loop3                 7:3    0    73M  1 loop /snap/core22/607
+loop4                 7:4    0 241,9M  1 loop /snap/firefox/2559
+loop5                 7:5    0 241,9M  1 loop /snap/firefox/2579
+loop6                 7:6    0 349,7M  1 loop /snap/gnome-3-38-2004/137
+loop7                 7:7    0 346,3M  1 loop /snap/gnome-3-38-2004/119
+loop8                 7:8    0 460,6M  1 loop /snap/gnome-42-2204/87
+loop9                 7:9    0 460,4M  1 loop /snap/gnome-42-2204/68
+loop10                7:10   0  91,7M  1 loop /snap/gtk-common-themes/1535
+loop11                7:11   0  45,9M  1 loop /snap/snap-store/638
+loop12                7:12   0  53,2M  1 loop /snap/snapd/18933
+loop13                7:13   0  49,8M  1 loop /snap/snapd/18596
+loop14                7:14   0   304K  1 loop /snap/snapd-desktop-integration/49
+loop15                7:15   0   428K  1 loop /snap/snapd-desktop-integration/57
+sda                   8:0    0    40G  0 disk
+├─sda1                8:1    0     1M  0 part
+├─sda2                8:2    0   513M  0 part /boot/efi
+└─sda3                8:3    0  39,5G  0 part
+  ├─vgubuntu-root   253:0    0  37,6G  0 lvm  /var/snap/firefox/common/host-hunspell
+  │                                           /
+  └─vgubuntu-swap_1 253:1    0   1,9G  0 lvm  [SWAP]
+sr0                  11:0    1  1024M  0 rom
+zetta55@ubuntu-vm1:~$ df -h
+Файл.система              Размер Использовано  Дост Использовано% Cмонтировано в
+tmpfs                       795M         1,6M  794M            1% /run
+/dev/mapper/vgubuntu-root    37G          12G   24G           34% /
+tmpfs                       3,9G            0  3,9G            0% /dev/shm
+tmpfs                       5,0M         4,0K  5,0M            1% /run/lock
+/dev/sda2                   512M         6,1M  506M            2% /boot/efi
+tmpfs                       795M          96K  795M            1% /run/user/1000
+zetta55@ubuntu-vm1:~$
 ```
+  
+  
 </details>
 
 
