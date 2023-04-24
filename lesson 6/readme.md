@@ -38,29 +38,76 @@ zetta55@ubuntu-vm1:~$
   
 <details><summary>• поставьте на нее PostgreSQL 15 через sudo apt</summary>
 
+  Подключаю репозиторий и устанавливаю postgresql.
 ```shell
+zetta55@ubuntu-vm1:~$ sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+zetta55@ubuntu-vm1:~$ wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
+zetta55@ubuntu-vm1:~$ sudo apt update
+zetta55@ubuntu-vm1:~$ sudo apt install postgresql postgresql-client -y
+```
+  Проверяю результат установки
+```shell
+zetta55@ubuntu-vm1:~$ sudo systemctl status postgresql
+● postgresql.service - PostgreSQL RDBMS
+     Loaded: loaded (/lib/systemd/system/postgresql.service; enabled; vendor preset: enabled)
+     Active: active (exited) since Mon 2023-04-24 15:55:19 MSK; 52s ago
+   Main PID: 7080 (code=exited, status=0/SUCCESS)
+        CPU: 1ms
+
+апр 24 15:55:19 ubuntu-vm1 systemd[1]: Starting PostgreSQL RDBMS...
+апр 24 15:55:19 ubuntu-vm1 systemd[1]: Finished PostgreSQL RDBMS.
+zetta55@ubuntu-vm1:~$ sudo pg_config --version
+PostgreSQL 15.2 (Ubuntu 15.2-1.pgdg22.04+1)
+zetta55@ubuntu-vm1:~$
+
 ```
 </details>
 
 <details><summary>• проверьте что кластер запущен через sudo -u postgres pg_lsclusters</summary>
 
 ```shell
+zetta55@ubuntu-vm1:~$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+15  main    5432 online postgres /var/lib/postgresql/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm1:~$
 ```
 </details>
 
-<details><summary>• зайдите из под пользователя postgres в psql и сделайте произвольную таблицу с произвольным содержимым</summary>
+<details><summary>• зайдите из под пользователя postgres в psql и сделайте произвольную таблицу с произвольным содержимым
 postgres=# create table test(c1 text);
 postgres=# insert into test values('1');
 \q</summary>
 
+  Зашёл пользователем postgres в psql, создал таблицу с произвольным содержимым.
 ```shell
+zetta55@ubuntu-vm1:~$ sudo -u postgres psql
+could not change directory to "/home/zetta55": Отказано в доступе
+psql (15.2 (Ubuntu 15.2-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=# create table test(c1 text);
+CREATE TABLE
+postgres=# insert into test values('1');
+INSERT 0 1
+postgres=#
+
 ```
 </details>
 
 
 <details><summary>• остановите postgres например через sudo -u postgres pg_ctlcluster 15 main stop</summary>
 
+  Стопаю postgres и проверяю результат выполнения остановки.
 ```shell
+zetta55@ubuntu-vm1:~$ sudo -u postgres pg_ctlcluster 15 main stop
+Warning: stopping the cluster using pg_ctlcluster will mark the systemd unit as failed. Consider using systemctl:
+  sudo systemctl stop postgresql@15-main
+  
+zetta55@ubuntu-vm1:~$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+15  main    5432 down   postgres /var/lib/postgresql/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm1:~$
+  
 ```
 </details>
 
