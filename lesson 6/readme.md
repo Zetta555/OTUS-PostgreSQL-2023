@@ -144,6 +144,7 @@ zetta55@ubuntu-vm1:~$
 
 <details><summary>• добавьте свеже-созданный диск к виртуальной машине - надо зайти в режим ее редактирования и дальше выбрать пункт attach existing disk</summary>
 
+
   Подключил созданный диск к VM.
 <p align="center">
 <image src="/lesson 6/add_new_vdi.png" alt="New vdi">
@@ -156,6 +157,98 @@ zetta55@ubuntu-vm1:~$
 <details><summary>• проинициализируйте диск согласно инструкции и подмонтировать файловую систему, только не забывайте менять имя диска на актуальное, в вашем случае это скорее всего будет /dev/sdb - https://www.digitalocean.com/community/tutorials/how-to-partition-and-format-storage-devices-in-linux</summary>
 
 ```shell
+zetta55@ubuntu-vm1:~$ sudo parted -l | grep Error
+[sudo] пароль для zetta55:
+Ошибка: /dev/sdb: метка диска не определена
+zetta55@ubuntu-vm1:~$ lsblk
+NAME                MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda                   8:0    0    40G  0 disk
+├─sda1                8:1    0     1M  0 part
+├─sda2                8:2    0   513M  0 part /boot/efi
+└─sda3                8:3    0  39,5G  0 part
+  ├─vgubuntu-root   253:0    0  37,6G  0 lvm  /var/snap/firefox/common/host-hunspell
+  │                                           /
+  └─vgubuntu-swap_1 253:1    0   1,9G  0 lvm  [SWAP]
+sdb                   8:16   0    10G  0 disk
+sr0                  11:0    1  1024M  0 rom
+zetta55@ubuntu-vm1:~$ sudo parted /dev/sdb mklabel gpt
+Информация: Не забудьте обновить /etc/fstab.
+
+zetta55@ubuntu-vm1:~$ lsblk
+NAME                MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda                   8:0    0    40G  0 disk
+├─sda1                8:1    0     1M  0 part
+├─sda2                8:2    0   513M  0 part /boot/efi
+└─sda3                8:3    0  39,5G  0 part
+  ├─vgubuntu-root   253:0    0  37,6G  0 lvm  /var/snap/firefox/common/host-hunspell
+  │                                           /
+  └─vgubuntu-swap_1 253:1    0   1,9G  0 lvm  [SWAP]
+sdb                   8:16   0    10G  0 disk
+sr0                  11:0    1  1024M  0 rom
+zetta55@ubuntu-vm1:~$ sudo parted -a opt /dev/sdb mkpart primary ext4 0% 100%
+Информация: Не забудьте обновить /etc/fstab.
+
+zetta55@ubuntu-vm1:~$ sudo mkfs.ext4 -L 10G /dev/sdb1
+mke2fs 1.46.5 (30-Dec-2021)
+Creating filesystem with 2620928 4k blocks and 655360 inodes
+Filesystem UUID: 885dd9db-3a5b-4b50-a5f9-e198b4a17d63
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632
+
+Allocating group tables: done
+Сохранение таблицы inod'ов: done
+Создание журнала (16384 блоков): готово
+Writing superblocks and filesystem accounting information: готово
+
+zetta55@ubuntu-vm1:~$ sudo lsblk --fs
+NAME                FSTYPE      FSVER    LABEL UUID                                   FSAVAIL FSUSE% MOUNTPOINTS
+sda
+├─sda1
+├─sda2              vfat        FAT32          6BDB-C223                               505,9M     1% /boot/efi
+└─sda3              LVM2_member LVM2 001       XTxL2s-Kenh-vV71-IwQJ-LUZB-KIdd-Kt169x
+  ├─vgubuntu-root   ext4        1.0            f5346c10-26d6-4733-9fae-f20d1a9d6a54     23,3G    31% /var/snap/firefox/common/host-hunspell
+  │                                                                                                  /
+  └─vgubuntu-swap_1 swap        1              08baf801-2f0b-42f6-8064-33db93e7bb1d                  [SWAP]
+sdb
+└─sdb1              ext4        1.0      10G   885dd9db-3a5b-4b50-a5f9-e198b4a17d63
+sr0
+zetta55@ubuntu-vm1:~$
+
+zetta55@ubuntu-vm1:~$ sudo mkdir -p /mnt/10G
+[sudo] пароль для zetta55:
+  
+zetta55@ubuntu-vm1:~$ sudo mount -o defaults /dev/sdb1 /mnt/10G
+  
+zetta55@ubuntu-vm1:~$ cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+/dev/mapper/vgubuntu-root /               ext4    errors=remount-ro 0       1
+# /boot/efi was on /dev/sda2 during installation
+UUID=6BDB-C223  /boot/efi       vfat    umask=0077      0       1
+/dev/mapper/vgubuntu-swap_1 none            swap    sw              0       0
+  
+zetta55@ubuntu-vm1:~$ sudo sh -c "echo 'LABEL=10G /mnt/10G ext4 defaults 0 2' >> /etc/fstab"
+  
+zetta55@ubuntu-vm1:~$ cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+/dev/mapper/vgubuntu-root /               ext4    errors=remount-ro 0       1
+# /boot/efi was on /dev/sda2 during installation
+UUID=6BDB-C223  /boot/efi       vfat    umask=0077      0       1
+/dev/mapper/vgubuntu-swap_1 none            swap    sw              0       0
+LABEL=10G /mnt/10G ext4 defaults 0 2
+zetta55@ubuntu-vm1:~$
+
 ```
 </details>
 
@@ -163,19 +256,89 @@ zetta55@ubuntu-vm1:~$
 <details><summary>• перезагрузите инстанс и убедитесь, что диск остается примонтированным (если не так смотрим в сторону fstab)</summary>
 
 ```shell
+zetta55@ubuntu-vm1:~$ sudo reboot
+
+  Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.19.0-40-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+Расширенное поддержание безопасности (ESM) для Applications выключено.
+
+0 обновлений может быть применено немедленно.
+
+7 дополнительных обновлений безопасности могут быть применены с помощью ESM Apps.
+Подробнее о включении службы ESM Apps at https://ubuntu.com/esm
+
+Last login: Mon Apr 24 17:11:39 2023 from 172.16.0.125
+
+zetta55@ubuntu-vm1:~$ mount | grep dev/sd
+/dev/sda2 on /boot/efi type vfat (rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro)
+/dev/sdb1 on /mnt/10G type ext4 (rw,relatime)
+zetta55@ubuntu-vm1:~$
+  
+zetta55@ubuntu-vm1:~$ lsblk | grep sd
+sda                   8:0    0    40G  0 disk
+├─sda1                8:1    0     1M  0 part
+├─sda2                8:2    0   513M  0 part /boot/efi
+└─sda3                8:3    0  39,5G  0 part
+sdb                   8:16   0    10G  0 disk
+└─sdb1                8:17   0    10G  0 part /mnt/10G
+zetta55@ubuntu-vm1:~$
 ```
+  как видно после ребута приаттаченый диск успешно смонтировался.
+  
 </details>
 
 <details><summary>• сделайте пользователя postgres владельцем /mnt/data - chown -R postgres:postgres /mnt/data/</summary>
 
 ```shell
+zetta55@ubuntu-vm1:~$ sudo chown -R postgres:postgres /mnt/10G/
+[sudo] пароль для zetta55:
+zetta55@ubuntu-vm1:~$ ls -la /mnt/10G/
+итого 24
+drwxr-xr-x 3 postgres postgres  4096 апр 24 17:14 .
+drwxr-xr-x 3 root     root      4096 апр 24 17:48 ..
+drwx------ 2 postgres postgres 16384 апр 24 17:14 lost+found
+zetta55@ubuntu-vm1:~$
+
 ```
 </details>
 
 
-<details><summary>• перенесите содержимое /var/lib/postgres/14 в /mnt/data - mv /var/lib/postgresql/15/mnt/data</summary>
+<details><summary>• перенесите содержимое /var/lib/postgres/15 в /mnt/data - mv /var/lib/postgresql/15 /mnt/data</summary>
 
 ```shell
+zetta55@ubuntu-vm1:~$ sudo mv /var/lib/postgresql/15 /mnt/10G
+
+zetta55@ubuntu-vm1:~$ sudo ls -la /mnt/10G/15/main/
+итого 92
+drwx------ 19 postgres postgres 4096 апр 24 18:04 .
+drwxr-xr-x  3 postgres postgres 4096 апр 24 15:55 ..
+drwx------  5 postgres postgres 4096 апр 24 15:55 base
+drwx------  2 postgres postgres 4096 апр 24 18:05 global
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_commit_ts
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_dynshmem
+drwx------  4 postgres postgres 4096 апр 24 18:09 pg_logical
+drwx------  4 postgres postgres 4096 апр 24 15:55 pg_multixact
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_notify
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_replslot
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_serial
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_snapshots
+drwx------  2 postgres postgres 4096 апр 24 18:04 pg_stat
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_stat_tmp
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_subtrans
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_tblspc
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_twophase
+-rw-------  1 postgres postgres    3 апр 24 15:55 PG_VERSION
+drwx------  3 postgres postgres 4096 апр 24 15:55 pg_wal
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_xact
+-rw-------  1 postgres postgres   88 апр 24 15:55 postgresql.auto.conf
+-rw-------  1 postgres postgres  130 апр 24 18:04 postmaster.opts
+-rw-------  1 postgres postgres  107 апр 24 18:04 postmaster.pid
+zetta55@ubuntu-vm1:~$
+
 ```
 </details>
 
