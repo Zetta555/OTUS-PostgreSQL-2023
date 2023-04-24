@@ -346,34 +346,93 @@ zetta55@ubuntu-vm1:~$
 <details><summary>• попытайтесь запустить кластер - sudo -u postgres pg_ctlcluster 15 main start</summary>
 
 ```shell
+  zetta55@ubuntu-vm1:~$ sudo -u postgres pg_ctlcluster 15 main start
+Error: /var/lib/postgresql/15/main is not accessible or does not exist
+zetta55@ubuntu-vm1:~$
+
 ```
 </details>
 
 
 <details><summary>• напишите получилось или нет и почему</summary>
 
-```shell
-```
+  Кластер запустить не получилось, т.к. данные postgres-инстанса были перемещены. Перемещение не было зафиксировано в настройках postgres
 </details>
 
 
 <details><summary>• задание: найти конфигурационный параметр в файлах раположенных в /etc/postgresql/15/main который надо поменять и поменяйте его</summary>
 
+  перехожу в директорию, содержащую конфиги и смотрю текущие настройки, определяющие расположение инстанса
 ```shell
+  zetta55@ubuntu-vm1:~$ cd /etc/postgresql/15/main
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ ls
+conf.d  environment  pg_ctl.conf  pg_hba.conf  pg_ident.conf  postgresql.conf  start.conf
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ cat postgresql.conf | grep data
+data_directory = '/var/lib/postgresql/15/main'          # use data in another directory
+#fsync = on                             # flush data to disk for crash safety
+                                        # unrecoverable data corruption)
+                                        #   open_datasync
+                                        #   fdatasync (default on Linux and FreeBSD)
+# Set these on the primary and on any standby that will send replication data.
+                                        #   %d = database name
+#client_encoding = sql_ascii            # actually, defaults to database
+#data_sync_retry = off                  # retry or panic on failure to fsync
+                                        # data?
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ 
 ```
+  
+
 </details>
 
 
 <details><summary>• напишите что и почему поменяли</summary>
 
+    Меняю настройки на новое расположение инстанса
 ```shell
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sed -i 's#^\(data_directory\s*=\s*\).*$#\1/mnt/10G/15/main#' /etc/postgresql/15/main/postgresql.conf
+sed: невозможно открыть временный файл /etc/postgresql/15/main/sed9btjuA: Отказано в доступе
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo sed -i 's#^\(data_directory\s*=\s*\).*$#\1/mnt/10G/15/main#' /etc/postgresql/15/main/postgresql.conf
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ cat postgresql.conf | grep data
+data_directory = /mnt/10G/15/main
+#fsync = on                             # flush data to disk for crash safety
+                                        # unrecoverable data corruption)
+                                        #   open_datasync
+                                        #   fdatasync (default on Linux and FreeBSD)
+# Set these on the primary and on any standby that will send replication data.
+                                        #   %d = database name
+#client_encoding = sql_ascii            # actually, defaults to database
+#data_sync_retry = off                  # retry or panic on failure to fsync
+                                        # data?
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo -u postgres pg_ctlcluster 15 main start
+Error: invalid line 42 in /etc/postgresql/15/main/postgresql.conf: data_directory = /mnt/10G/15/main
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$
+```  
+  
+  Что-то пошло не так.
+  Выснил. Надо было добавить одинарные кавычки и экранировать их.
+```shell
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo sed -i 's#^\(data_directory\s*=\s*\).*$#\1'\''/mnt/10G/15/main'\''#' /etc/postgresql/15/main/postgresql.conf
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory   Log file
+15  main    5432 down   postgres /mnt/10G/15/main /var/log/postgresql/postgresql-15-main.log
 ```
+  Done. Инстанс сервера стартанул с новым расположением.
+
 </details>
 
 
 <details><summary>• попытайтесь запустить кластер - sudo -u postgres pg_ctlcluster 15 main start</summary>
 
 ```shell
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo -u postgres pg_ctlcluster 15 main start
+Warning: the cluster will not be running as a systemd service. Consider using systemctl:
+  sudo systemctl start postgresql@15-main
+Removed stale pid file.
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory   Log file
+15  main    5432 online postgres /mnt/10G/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm1:/etc/postgresql/15/main$
+
 ```
 </details>
 
