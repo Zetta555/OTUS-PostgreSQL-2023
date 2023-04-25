@@ -426,8 +426,9 @@ Ver Cluster Port Status Owner    Data directory   Log file
 ```shell
 zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo -u postgres pg_ctlcluster 15 main start
 Warning: the cluster will not be running as a systemd service. Consider using systemctl:
-  sudo systemctl start postgresql@15-main
+sudo systemctl start postgresql@15-main
 Removed stale pid file.
+
 zetta55@ubuntu-vm1:/etc/postgresql/15/main$ sudo -u postgres pg_lsclusters
 Ver Cluster Port Status Owner    Data directory   Log file
 15  main    5432 online postgres /mnt/10G/15/main /var/log/postgresql/postgresql-15-main.log
@@ -439,20 +440,226 @@ zetta55@ubuntu-vm1:/etc/postgresql/15/main$
 
 <details><summary>• напишите получилось или нет и почему</summary>
 
-```shell
-```
+  Получилось. СУБД подхватила настройки нового расположения БД.
 </details>
 
 
 <details><summary>• зайдите через через psql и проверьте содержимое ранее созданной таблицы</summary>
 
 ```shell
+zetta55@ubuntu-vm1:~$ sudo -u postgres psql
+[sudo] пароль для zetta55:
+could not change directory to "/home/zetta55": Отказано в доступе
+psql (15.2 (Ubuntu 15.2-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=# SELECT * FROM test;
+ c1
+----
+ 1
+(1 row)
+
+postgres=#
+
 ```
 </details>
 
 
 <details><summary>• задание со звездочкой *: не удаляя существующий инстанс ВМ сделайте новый, поставьте на его PostgreSQL, удалите файлы с данными из /var/lib/postgres, перемонтируйте внешний диск который сделали ранее от первой виртуальной машины ко второй и запустите PostgreSQL на второй машине так чтобы он работал с данными на внешнем диске, расскажите как вы это сделали и что в итоге получилось.</summary>
 
+  Создал новый инстанс VM
 ```shell
+# 1ая VM
+zetta55@ubuntu-vm1:~$ sudo dmidecode -t system | grep -i uuid
+[sudo] пароль для zetta55:
+        UUID: 82b611a1-e85e-fb4c-8d0a-32f67ab82784
+  zetta55@ubuntu-vm1:~$ ip a | grep 172.16
+    inet 172.16.0.71/25 brd 172.16.0.127 scope global dynamic noprefixroute enp0s3
+zetta55@ubuntu-vm1:~$
+
+# 2ая VM
+zetta55@ubuntu-vm2:~$ sudo dmidecode -t system | grep -i uuid
+[sudo] password for zetta55:
+        UUID: 17a99d9a-08e9-ec4f-ac25-0880219c085b
+zetta55@ubuntu-vm2:~$ ip a | grep 172.16
+    inet 172.16.0.77/25 brd 172.16.0.127 scope global dynamic noprefixroute enp0s3
+zetta55@ubuntu-vm2:~$
 ```
+
+  На 1ой VM остановил кластер PG, отмонтировал диск с БД, закомментировал строку с отмонтированным диском в fstab, выключил VM1, отключил диск от VM1 средствами гипервизора.
+  
+  ```shell
+  
+  zetta55@ubuntu-vm1:~$ cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+/dev/mapper/vgubuntu-root /               ext4    errors=remount-ro 0       1
+# /boot/efi was on /dev/sda2 during installation
+UUID=6BDB-C223  /boot/efi       vfat    umask=0077      0       1
+/dev/mapper/vgubuntu-swap_1 none            swap    sw              0       0
+#LABEL=10G /mnt/10G ext4 defaults 0 2
+zetta55@ubuntu-vm1:~$
+
+  zetta55@ubuntu-vm1:~$ sudo -u postgres pg_ctlcluster 15 main stop
+[sudo] пароль для zetta55:
+Warning: stopping the cluster using pg_ctlcluster will mark the systemd unit as failed. Consider using systemctl:
+  sudo systemctl stop postgresql@15-main
+zetta55@ubuntu-vm1:~$ sudo -u postgres pg_lsclusters
+\Ver Cluster Port Status Owner    Data directory   Log file
+15  main    5432 down   postgres /mnt/10G/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm1:~$ sudo umount /mnt/10G
+zetta55@ubuntu-vm1:~$ df -h
+Файл.система              Размер Использовано  Дост Использовано% Cмонтировано в
+tmpfs                       795M         1,6M  794M            1% /run
+/dev/mapper/vgubuntu-root    37G          12G   24G           34% /
+tmpfs                       3,9G            0  3,9G            0% /dev/shm
+tmpfs                       5,0M         4,0K  5,0M            1% /run/lock
+/dev/sda2                   512M         6,1M  506M            2% /boot/efi
+tmpfs                       795M          96K  795M            1% /run/user/1000
+zetta55@ubuntu-vm1:~$
+```
+  Переподключаю диск к VM2, устанавливаю Postresql
+  
+```shell  
+
+zetta55@ubuntu-vm2:~$ sudo mkdir /mnt/10G
+zetta55@ubuntu-vm2:~$ sudo lsblk --fs
+NAME   FSTYPE   FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+sda
+├─sda1
+├─sda2 vfat     FAT32       7193-6051                             505,9M     1% /boot/efi
+└─sda3 ext4     1.0         af1d0af2-3db3-4c9e-b2d6-0ab8d7550421     10G    53% /var/snap/firefox/common/host-hunspell
+                                                                                /
+sdb
+└─sdb1 ext4     1.0   10G   885dd9db-3a5b-4b50-a5f9-e198b4a17d63
+sr0
+zetta55@ubuntu-vm2:~$
+
+zetta55@ubuntu-vm2:~$ sudo sh -c "echo 'LABEL=10G /mnt/10G ext4 defaults 0 2' >> /etc/fstab"
+zetta55@ubuntu-vm2:~$ cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+# / was on /dev/sda3 during installation
+UUID=af1d0af2-3db3-4c9e-b2d6-0ab8d7550421 /               ext4    errors=remount-ro 0       1
+# /boot/efi was on /dev/sda2 during installation
+UUID=7193-6051  /boot/efi       vfat    umask=0077      0       1
+/swapfile                                 none            swap    sw              0       0
+LABEL=10G /mnt/10G ext4 defaults 0 2
+zetta55@ubuntu-vm2:~$
+  
+zetta55@ubuntu-vm2:~$ sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+zetta55@ubuntu-vm2:~$ wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
+zetta55@ubuntu-vm2:~$ sudo apt update
+zetta55@ubuntu-vm2:~$ sudo apt install postgresql postgresql-client -y
+
+zetta55@ubuntu-vm2:~$ sudo systemctl status postgresql
+● postgresql.service - PostgreSQL RDBMS
+     Loaded: loaded (/lib/systemd/system/postgresql.service; enabled; vendor preset: enabled)
+     Active: active (exited) since Tue 2023-04-25 13:49:40 MSK; 10s ago
+   Main PID: 24623 (code=exited, status=0/SUCCESS)
+        CPU: 1ms
+
+апр 25 13:49:40 ubuntu-vm2 systemd[1]: Starting PostgreSQL RDBMS...
+апр 25 13:49:40 ubuntu-vm2 systemd[1]: Finished PostgreSQL RDBMS.
+zetta55@ubuntu-vm2:~$ sudo pg_config --version
+PostgreSQL 15.2 (Ubuntu 15.2-1.pgdg22.04+1)
+zetta55@ubuntu-vm2:~$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+15  main    5432 online postgres /var/lib/postgresql/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm2:~$ sudo -u postgres pg_ctlcluster 15 main stop
+Warning: stopping the cluster using pg_ctlcluster will mark the systemd unit as failed. Consider using systemctl:
+  sudo systemctl stop postgresql@15-main
+zetta55@ubuntu-vm2:~$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+15  main    5432 down   postgres /var/lib/postgresql/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm2:~$ sudo chown -R postgres:postgres /mnt/10G/
+zetta55@ubuntu-vm2:~$  
+zetta55@ubuntu-vm2:~$ sudo mount -a
+zetta55@ubuntu-vm2:~$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs           393M  1,6M  391M   1% /run
+/dev/sda3        24G   13G  9,8G  58% /
+tmpfs           2,0G     0  2,0G   0% /dev/shm
+tmpfs           5,0M  4,0K  5,0M   1% /run/lock
+/dev/sda2       512M  6,1M  506M   2% /boot/efi
+tmpfs           393M   80K  393M   1% /run/user/128
+tmpfs           393M   72K  393M   1% /run/user/1000
+/dev/sdb1       9,8G   39M  9,2G   1% /mnt/10G
+zetta55@ubuntu-vm2:~$ ls -la /mnt/10G/
+total 28
+drwxr-xr-x 4 postgres postgres  4096 апр 24 18:11 .
+drwxr-xr-x 3 root     root      4096 апр 25 13:32 ..
+drwxr-xr-x 3 postgres postgres  4096 апр 24 15:55 15
+drwx------ 2 postgres postgres 16384 апр 24 17:14 lost+found
+zetta55@ubuntu-vm2:~$ sudo ls -la /mnt/10G/15/main/
+total 88
+drwx------ 19 postgres postgres 4096 апр 25 13:07 .
+drwxr-xr-x  3 postgres postgres 4096 апр 24 15:55 ..
+drwx------  5 postgres postgres 4096 апр 24 15:55 base
+drwx------  2 postgres postgres 4096 апр 25 10:40 global
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_commit_ts
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_dynshmem
+drwx------  4 postgres postgres 4096 апр 25 13:07 pg_logical
+drwx------  4 postgres postgres 4096 апр 24 15:55 pg_multixact
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_notify
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_replslot
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_serial
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_snapshots
+drwx------  2 postgres postgres 4096 апр 25 13:07 pg_stat
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_stat_tmp
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_subtrans
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_tblspc
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_twophase
+-rw-------  1 postgres postgres    3 апр 24 15:55 PG_VERSION
+drwx------  3 postgres postgres 4096 апр 24 15:55 pg_wal
+drwx------  2 postgres postgres 4096 апр 24 15:55 pg_xact
+-rw-------  1 postgres postgres   88 апр 24 15:55 postgresql.auto.conf
+-rw-------  1 postgres postgres  119 апр 25 08:06 postmaster.opts
+zetta55@ubuntu-vm2:~$ sudo sed -i 's#^\(data_directory\s*=\s*\).*$#\1'\''/mnt/10G/15/main'\''#' /etc/postgresql/15/main/postgresql.conf
+zetta55@ubuntu-vm2:~$ cat postgresql.conf | grep data
+cat: postgresql.conf: No such file or directory
+zetta55@ubuntu-vm2:~$ cat /etc/postgresql/15/main/postgresql.conf | grep data
+data_directory = '/mnt/10G/15/main'
+#fsync = on                             # flush data to disk for crash safety
+                                        # unrecoverable data corruption)
+                                        #   open_datasync
+                                        #   fdatasync (default on Linux and FreeBSD)
+# Set these on the primary and on any standby that will send replication data.
+                                        #   %d = database name
+#client_encoding = sql_ascii            # actually, defaults to database
+#data_sync_retry = off                  # retry or panic on failure to fsync
+                                        # data?
+zetta55@ubuntu-vm2:~$ sudo -u postgres pg_ctlcluster 15 main start
+Warning: the cluster will not be running as a systemd service. Consider using systemctl:
+  sudo systemctl start postgresql@15-main
+zetta55@ubuntu-vm2:~$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory   Log file
+15  main    5432 online postgres /mnt/10G/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm2:~$ sudo -u postgres psql
+could not change directory to "/home/zetta55": Permission denied
+psql (15.2 (Ubuntu 15.2-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=# SELECT * FROM test;
+ c1
+----
+ 1
+(1 row)
+
+postgres=# \q
+zetta55@ubuntu-vm2:~$
+```
+  
 </details>
+
+  В задании * отработал кейс переноса БД на другой сервер.
