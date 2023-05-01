@@ -71,36 +71,64 @@ postgres=#
 <details><summary>• создайте новую базу данных testdb</summary>
 
 ```shell
+postgres=# CREATE DATABASE testdb;
+CREATE DATABASE
+postgres=#
+
 ```
 </details>
 
 <details><summary>• зайдите в созданную базу данных под пользователем postgres</summary>
 
 ```shell
+zetta55@ubuntu-vm3:~$ sudo -u postgres psql testdb
+[sudo] password for zetta55:
+could not change directory to "/home/zetta55": Permission denied
+psql (14.7 (Ubuntu 14.7-0ubuntu0.22.04.1))
+Type "help" for help.
+
+testdb=#
+
 ```
 </details>
 
 <details><summary>• создайте новую схему testnm</summary>
 
 ```shell
+testdb=# CREATE SCHEMA testnm;
+CREATE SCHEMA
+testdb=#
+
 ```
 </details>
 
 <details><summary>• создайте новую таблицу t1 с одной колонкой c1 типа integer</summary>
 
 ```shell
+testdb=# CREATE TABLE t1(c1 integer);
+CREATE TABLE
+testdb=#
+
 ```
 </details>
 
 <details><summary>• вставьте строку со значением c1=1</summary>
 
 ```shell
+testdb=# INSERT INTO t1 values(1);
+INSERT 0 1
+testdb=#
+
 ```
 </details>
 
 <details><summary>• создайте новую роль readonly</summary>
 
 ```shell
+testdb=# CREATE ROLE readonly;
+CREATE ROLE
+testdb=#
+
 ```
 </details>
 
