@@ -15,12 +15,56 @@
 <details><summary>• создайте новый кластер PostgresSQL 14</summary>
 
 ```shell
+zetta55@ubuntu-vm3:~$ sudo apt install postgresql-14
+...
+...
+fixing permissions on existing directory /var/lib/postgresql/14/main ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... Europe/Moscow
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+update-alternatives: using /usr/share/postgresql/14/man/man1/postmaster.1.gz to provide /usr/share/man/man1/postmaster.1.gz (postmaster.1.gz) in auto mode
+Processing triggers for man-db (2.10.2-1) ...
+Processing triggers for libc-bin (2.35-0ubuntu3.1) ...
+zetta55@ubuntu-vm3:~$
 ```
+Проверяю установку postgres-a
+```shell
+zetta55@ubuntu-vm3:~$ sudo systemctl status postgresql
+● postgresql.service - PostgreSQL RDBMS
+     Loaded: loaded (/lib/systemd/system/postgresql.service; enabled; vendor preset: enabled)
+     Active: active (exited) since Mon 2023-05-01 15:26:26 MSK; 3min 21s ago
+    Process: 35449 ExecStart=/bin/true (code=exited, status=0/SUCCESS)
+   Main PID: 35449 (code=exited, status=0/SUCCESS)
+        CPU: 1ms
+мая 01 15:26:26 ubuntu-vm3 systemd[1]: Starting PostgreSQL RDBMS...
+мая 01 15:26:26 ubuntu-vm3 systemd[1]: Finished PostgreSQL RDBMS.
+
+zetta55@ubuntu-vm3:~$ sudo pg_config --version
+PostgreSQL 14.7 (Ubuntu 14.7-0ubuntu0.22.04.1)
+
+zetta55@ubuntu-vm3:~$ sudo -u postgres pg_lsclusters
+Ver Cluster Port Status Owner    Data directory              Log file
+14  main    5432 online postgres /var/lib/postgresql/14/main /var/log/postgresql/postgresql-14-main.log
+zetta55@ubuntu-vm3:~$
+```
+ок
 </details>
 
 <details><summary>• зайдите в созданный кластер под пользователем postgres</summary>
 
 ```shell
+zetta55@ubuntu-vm3:~$ sudo -u postgres psql
+could not change directory to "/home/zetta55": Permission denied
+psql (14.7 (Ubuntu 14.7-0ubuntu0.22.04.1))
+Type "help" for help.
+
+postgres=#
 ```
 </details>
 
