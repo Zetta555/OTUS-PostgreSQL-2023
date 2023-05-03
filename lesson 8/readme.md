@@ -121,20 +121,90 @@ zetta55@ubuntu-vm2:/mnt/10G$
 
 <details><summary>• Применить параметры настройки PostgreSQL из прикрепленного к материалам занятия файла</summary>
 
+  Применяю настройки из файла.
 ```shell
+zetta55@ubuntu-vm2:~$ sudo -u postgres psql demo
+could not change directory to "/home/zetta55": Permission denied
+psql (15.2 (Ubuntu 15.2-1.pgdg22.04+1))
+Type "help" for help.
+
+demo=# ALTER SYSTEM SET max_connections TO '40';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET shared_buffers TO '1GB';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET effective_cache_size TO '3GB';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET maintenance_work_mem TO '512MB';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET checkpoint_completion_target TO '0.9';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET wal_buffers TO '16MB';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET default_statistics_target TO '500';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET random_page_cost TO '4';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET effective_io_concurrency TO '2';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET work_mem TO '6553kB';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET min_wal_size TO '4GB';
+ALTER SYSTEM
+demo=# ALTER SYSTEM SET max_wal_size TO '16GB';
+ALTER SYSTEM
+demo=# \q
+zetta55@ubuntu-vm2:~$ sudo pg_ctlcluster 15 main restart
+
+zetta55@ubuntu-vm2:~$ sudo -u postgres psql -c "select pg_reload_conf();"
+could not change directory to "/home/zetta55": Permission denied
+ pg_reload_conf
+----------------
+ t
+(1 row)
+
+zetta55@ubuntu-vm2:~$
+
 ```
+  Также достаточно было бы добавить все значения из файлика в конец конфига /etc/postgresql/15/main/postgresql.conf, так как устанавливается значение из последней считанной строки и рестартануть кластер или выполнить select pg_reload_conf();
 </details>
 
 <details><summary>• Протестировать заново</summary>
 
 ```shell
+zetta55@ubuntu-vm2:~$ sudo -u postgres pgbench -c8 -P 6 -T 60 -U postgres demo
+pgbench (15.2 (Ubuntu 15.2-1.pgdg22.04+1))
+starting vacuum...end.
+progress: 6.0 s, 765.1 tps, lat 10.404 ms stddev 5.830, 0 failed
+progress: 12.0 s, 763.7 tps, lat 10.458 ms stddev 6.016, 0 failed
+progress: 18.0 s, 758.7 tps, lat 10.517 ms stddev 5.940, 0 failed
+progress: 24.0 s, 763.3 tps, lat 10.459 ms stddev 5.958, 0 failed
+progress: 30.0 s, 766.5 tps, lat 10.417 ms stddev 5.699, 0 failed
+progress: 36.0 s, 748.8 tps, lat 10.657 ms stddev 6.058, 0 failed
+progress: 42.0 s, 762.7 tps, lat 10.463 ms stddev 5.854, 0 failed
+progress: 48.0 s, 718.2 tps, lat 11.122 ms stddev 6.167, 0 failed
+progress: 54.0 s, 741.0 tps, lat 10.780 ms stddev 6.039, 0 failed
+progress: 60.0 s, 732.5 tps, lat 10.895 ms stddev 6.106, 0 failed
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 1
+query mode: simple
+number of clients: 8
+number of threads: 1
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 45131
+number of failed transactions: 0 (0.000%)
+latency average = 10.613 ms
+latency stddev = 5.970 ms
+initial connection time = 11.247 ms
+tps = 752.165181 (without initial connection time)
+zetta55@ubuntu-vm2:~$
 ```
 </details>
 
 <details><summary>• Что изменилось и почему?</summary>
 
-```shell
-```
+  Вроде как задержки стали меньше.
+  
 </details>
 
 <details><summary>• Создать таблицу с текстовым полем и заполнить случайными или сгенерированными данным в размере 1млн строк</summary>
