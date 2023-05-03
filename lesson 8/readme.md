@@ -35,7 +35,8 @@ zetta55@ubuntu-vm2:~$ free
 </details>
 
 <details><summary>• Создать БД для тестов: выполнить pgbench -i postgres</summary>
-Создал тестовую базу по мануалу https://www.postgrespro.ru/education/demodb
+
+  Создал тестовую базу по мануалу https://www.postgrespro.ru/education/demodb
 ```shell
 zetta55@ubuntu-vm2:/mnt/10G$ ls -la
 total 909280
