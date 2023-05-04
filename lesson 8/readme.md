@@ -209,11 +209,15 @@ zetta55@ubuntu-vm2:~$
 
 <details><summary>• Создать таблицу с текстовым полем и заполнить случайными или сгенерированными данным в размере 1млн строк</summary>
 
+  Создаю таблицу с одним столбцом текстовых полей.
 ```shell
 demo=# CREATE TABLE tmp_demo (col1 text);
 CREATE TABLE
 demo=#
-
+```
+  
+  Смотрю размер таблицы после её создания 
+```shell
 demo=# \dt+ tmp_demo
                                         List of relations
   Schema  |   Name   | Type  |  Owner   | Persistence | Access method |    Size    | Description
@@ -223,11 +227,53 @@ demo=# \dt+ tmp_demo
 
 demo=#
 ```
+  
+  Смотрю кол-во строк в таблице после её создания
+```shell
+demo=# SELECT * FROM tmp_demo;
+ col1
+------
+(0 rows)
+
+demo=#
+```
+  
+  Добавляю 1М строк с произвольным содержимым
+```shell
+demo=# INSERT INTO tmp_demo(col1) SELECT md5(random()::text) FROM generate_series(1,1000000);
+INSERT 0 1000000
+  
+demo=# SELECT * FROM tmp_demo LIMIT 10;
+               col1
+----------------------------------
+ 0a738130309bf42971fbb5f31fcb401a
+ e8d655f09c4213651ed902b7291959b6
+ 58fe6f29a07a4ee9f933db7ec12222b5
+ 0f7d2c5b6d365d7e55929c82eae91b73
+ b05e241fc5427118cc7f7ac40654eff5
+ f51b1e74da5f171944c565fc4b17058b
+ b89b2125d43f779ebbee91b85067cc50
+ 8ff76293dcb33c3f343d342af4c42cab
+ 216076b5c19d3debe63664564ca93600
+ 8572eb89a8be056e4701d2b67a3533f6
+(10 rows)
+
+demo=#
+
+```
 </details>
 
 <details><summary>• Посмотреть размер файла с таблицей</summary>
 
 ```shell
+demo=# \dt+ tmp_demo
+                                     List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method | Size  | Description
+----------+----------+-------+----------+-------------+---------------+-------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 65 MB |
+(1 row)
+
+demo=#
 ```
 </details>
 
