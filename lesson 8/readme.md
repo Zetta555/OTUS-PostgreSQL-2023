@@ -165,7 +165,7 @@ could not change directory to "/home/zetta55": Permission denied
 zetta55@ubuntu-vm2:~$
 
 ```
-  Также достаточно было бы добавить все значения из файлика в конец конфига /etc/postgresql/15/main/postgresql.conf, так как устанавливается значение из последней считанной строки и рестартануть кластер или выполнить select pg_reload_conf();
+  Также достаточно было бы добавить все значения из файлика в конец конфига /etc/postgresql/15/main/postgresql.conf, так как устанавливается значение из последней считанной строки и рестартануть кластер или выполнить select pg_reload_conf(); - но этот запрос не все изменившиеся параметры может подкхватить.
 </details>
 
 <details><summary>• Протестировать заново</summary>
@@ -210,6 +210,18 @@ zetta55@ubuntu-vm2:~$
 <details><summary>• Создать таблицу с текстовым полем и заполнить случайными или сгенерированными данным в размере 1млн строк</summary>
 
 ```shell
+demo=# CREATE TABLE tmp_demo (col1 text);
+CREATE TABLE
+demo=#
+
+demo=# \dt+ tmp_demo
+                                        List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |    Size    | Description
+----------+----------+-------+----------+-------------+---------------+------------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 8192 bytes |
+(1 row)
+
+demo=#
 ```
 </details>
 
