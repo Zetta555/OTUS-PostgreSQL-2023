@@ -203,7 +203,7 @@ zetta55@ubuntu-vm2:~$
 
 <details><summary>• Что изменилось и почему?</summary>
 
-  Практически без изменений. 
+  Практически без изменений, tps на прежнем уровне.
   
 </details>
 
@@ -258,6 +258,12 @@ demo=# SELECT * FROM tmp_demo LIMIT 10;
  8572eb89a8be056e4701d2b67a3533f6
 (10 rows)
 
+demo=# SELECT count(*) FROM tmp_demo;
+  count
+---------
+ 1000000
+(1 row)
+
 demo=#
 
 ```
@@ -278,8 +284,140 @@ demo=#
 </details>
 
 <details><summary>• 5 раз обновить все строчки и добавить к каждой строчке любой символ</summary>
-
+  
+  Обновляю все строчки, добавляю к каждой строке +a, смотрю размер таблицы, кол-во строк, изменившееся содержимое. 5 раз.
 ```shell
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+a');  -- 1-ый шаг.
+UPDATE 1000000
+demo=# SELECT count(*) FROM tmp_demo;
+  count
+---------
+ 1000000
+(1 row)
+
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 130 MB |
+(1 row)
+
+demo=# SELECT * FROM tmp_demo LIMIT 10;
+                 col1
+--------------------------------------
+ c967cf8a9dae164797f043c277832bab+a
+ 4eb7bd3e5dc2112c9d8c2d411f198b21+a
+ 1456eac84cdb2d2f76a87394ff2787a3+a
+ d3755c14e076f8aec709cf84d6d557f7+a
+ c557eff077a0d1370be183abbfa9eae6+a
+ bbbd565230287e711c4fbd7c86d3cfdd+a
+ 32334df5a18da6098ec00885fa24bafa+a
+ ba5e28049b3bd5920ece566c51069cdf+a
+ e727ce258d25df74a4e3eca94e12a59a+a
+ 77097c664d9dada45a3ef4934f475738+a
+(10 rows)
+
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+a');  -- 2-ой шаг.
+UPDATE 1000000
+demo=# SELECT count(*) FROM tmp_demo;
+  count
+---------
+ 1000000
+(1 row)
+
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 130 MB |
+(1 row)
+
+demo=# SELECT * FROM tmp_demo LIMIT 5;
+                 col1
+--------------------------------------
+ c967cf8a9dae164797f043c277832bab+a+a
+ 4eb7bd3e5dc2112c9d8c2d411f198b21+a+a
+ 1456eac84cdb2d2f76a87394ff2787a3+a+a
+ d3755c14e076f8aec709cf84d6d557f7+a+a
+ c557eff077a0d1370be183abbfa9eae6+a+a
+(5 rows)
+
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+a');  -- 3-ий шаг.
+UPDATE 1000000
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 130 MB |
+(1 row)
+
+demo=# SELECT count(*) FROM tmp_demo;
+  count
+---------
+ 1000000
+(1 row)
+
+demo=# SELECT * FROM tmp_demo LIMIT 5;
+                  col1
+----------------------------------------
+ c967cf8a9dae164797f043c277832bab+a+a+a
+ 4eb7bd3e5dc2112c9d8c2d411f198b21+a+a+a
+ 1456eac84cdb2d2f76a87394ff2787a3+a+a+a
+ d3755c14e076f8aec709cf84d6d557f7+a+a+a
+ c557eff077a0d1370be183abbfa9eae6+a+a+a
+(5 rows)
+
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+a');  -- 4-ый шаг.
+UPDATE 1000000
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 138 MB |
+(1 row)
+
+demo=# SELECT count(*) FROM tmp_demo;
+  count
+---------
+ 1000000
+(1 row)
+
+demo=# SELECT * FROM tmp_demo LIMIT 5;
+                   col1
+------------------------------------------
+ 2604898253790f706189a0a919d7688e+a+a+a+a
+ b11347dd72a504dfcc9af4aed41b0a74+a+a+a+a
+ 4e080801e004b7bc7c1376acfd1c1b48+a+a+a+a
+ 2aef04dc9bbf1adc5b2489fdfa0a0ec8+a+a+a+a
+ 7256e2ef7f7c66ab75f59ca1733cd7bc+a+a+a+a
+(5 rows)
+
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+a');  -- 5-ый шаг.
+UPDATE 1000000
+demo=# SELECT count(*) FROM tmp_demo;
+  count
+---------
+ 1000000
+(1 row)
+
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 211 MB |
+(1 row)
+
+demo=# SELECT * FROM tmp_demo LIMIT 5;
+                    col1
+--------------------------------------------
+ c967cf8a9dae164797f043c277832bab+a+a+a+a+a
+ 4eb7bd3e5dc2112c9d8c2d411f198b21+a+a+a+a+a
+ 1456eac84cdb2d2f76a87394ff2787a3+a+a+a+a+a
+ d3755c14e076f8aec709cf84d6d557f7+a+a+a+a+a
+ c557eff077a0d1370be183abbfa9eae6+a+a+a+a+a
+(5 rows)
+
+demo=#
 ```
 </details>
 
