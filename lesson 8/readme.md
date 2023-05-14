@@ -574,19 +574,21 @@ demo=#
 </details>
 
 <details><summary>• Не забудьте включить автовакуум)</summary>
-
+  
+  Включил autovacuum.
 ```shell
+demo=# ALTER TABLE tmp_demo SET (autovacuum_enabled = true);
+ALTER TABLE
+demo=# VACUUM FULL tmp_demo;
+VACUUM
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 112 MB |
+(1 row)
+
+demo=#
 ```
 </details>
 
-<details><summary>• Задание со *:</summary>
-
-```shell
-```
-</details>
-
-<details><summary>• Написать анонимную процедуру, в которой в цикле 10 раз обновятся все строчки в искомой таблице. Не забыть вывести номер шага цикла.</summary>
-
-```shell
-```
-</details>
