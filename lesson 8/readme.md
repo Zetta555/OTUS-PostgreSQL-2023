@@ -516,21 +516,61 @@ demo=#
 </details>
 
 <details><summary>• 10 раз обновить все строчки и добавить к каждой строчке любой символ</summary>
-
+  
+  Обновил 10 строчки и добавил к каждой строке символы.
 ```shell
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+01');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+02');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+03');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+04');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+05');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+06');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+07');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+08');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+09');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+10');
+UPDATE 1000000
+demo=# SELECT col1, xmin,xmax,cmin,cmax,ctid FROM tmp_demo LIMIT 5;
+                                         col1                                         |  xmin  | xmax | cmin | cmax |    ctid
+--------------------------------------------------------------------------------------+--------+------+------+------+------------
+ fb8a1e54e97c836370d3aa5fd9224f18+a+a+a+a+a+v+1+1+1+1+1+01+02+03+04+05+06+07+08+09+10 | 272144 |    0 |    0 |    0 | (8332,104)
+ 780fdd1d8d8ab7d9ec3ecf1290b58569+a+a+a+a+a+v+1+1+1+1+1+01+02+03+04+05+06+07+08+09+10 | 272144 |    0 |    0 |    0 | (8332,105)
+ 5e36b2dfaa1656aa6f826ba943c9c3d9+a+a+a+a+a+v+1+1+1+1+1+01+02+03+04+05+06+07+08+09+10 | 272144 |    0 |    0 |    0 | (8332,106)
+ 37c45f2ed028c8a8eae2239d2f8df866+a+a+a+a+a+v+1+1+1+1+1+01+02+03+04+05+06+07+08+09+10 | 272144 |    0 |    0 |    0 | (8332,107)
+ 0301ec805178fd25115a393d47d2146c+a+a+a+a+a+v+1+1+1+1+1+01+02+03+04+05+06+07+08+09+10 | 272144 |    0 |    0 |    0 | (8332,145)
+(5 rows)
+
+demo=#
 ```
 </details>
 
 <details><summary>• Посмотреть размер файла с таблицей</summary>
 
+  Файл таблицы значительно распух. С 300Мб до 1076Мб.
 ```shell
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size   | Description
+----------+----------+-------+----------+-------------+---------------+---------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 1076 MB |
+(1 row)
+
+demo=#
 ```
 </details>
 
 <details><summary>• Объясните полученный результат</summary>
-
-```shell
-```
+  
+  PostgreSQL реально не делает updates, он делает insert нового tuple и делает delete. Delete – эффективно никакой не delete, а просто он убирает из области видимости текущего скопа транзакций данную версию строки. И tuple продолжает лежать на диске, ее autovacuum должен вычистить. А т.к. autovacuum у нас на данном этапе отключен, мы и наблюдаем физическое "распухание" файла таблицы.
 </details>
 
 <details><summary>• Не забудьте включить автовакуум)</summary>
