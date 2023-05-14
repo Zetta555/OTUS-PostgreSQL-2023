@@ -424,30 +424,94 @@ demo=#
 <details><summary>• Посмотреть количество мертвых строчек в таблице и когда последний раз приходил автовакуум</summary>
 
 ```shell
+  demo=# SELECT relname, n_live_tup, n_dead_tup, trunc(100*n_dead_tup/(n_live_tup+1))::float "ratio%", last_autovacuum FROM pg_stat_user_TABLEs WHERE relname = 'tmp_demo';
+ relname  | n_live_tup | n_dead_tup | ratio% |        last_autovacuum
+----------+------------+------------+--------+-------------------------------
+ tmp_demo |    1000000 |          0 |      0 | 2023-05-14 16:55:17.207576+03
+(1 row)
+
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+v');
+UPDATE 1000000
+demo=# SELECT relname, n_live_tup, n_dead_tup, trunc(100*n_dead_tup/(n_live_tup+1))::float "ratio%", last_autovacuum FROM pg_stat_user_TABLEs WHERE relname = 'tmp_demo';
+ relname  | n_live_tup | n_dead_tup | ratio% |        last_autovacuum
+----------+------------+------------+--------+-------------------------------
+ tmp_demo |    1000000 |    1000000 |     99 | 2023-05-14 16:55:17.207576+03
+(1 row)
+
+demo=#
 ```
 </details>
 
 <details><summary>• Подождать некоторое время, проверяя, пришел ли автовакуум</summary>
 
 ```shell
+  demo=# SELECT relname, n_live_tup, n_dead_tup, trunc(100*n_dead_tup/(n_live_tup+1))::float "ratio%", last_autovacuum FROM pg_stat_user_TABLEs WHERE relname = 'tmp_demo';
+ relname  | n_live_tup | n_dead_tup | ratio% |        last_autovacuum
+----------+------------+------------+--------+-------------------------------
+ tmp_demo |    1000000 |          0 |      0 | 2023-05-14 18:30:19.333821+03
+(1 row)
+
+demo=#
+demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 211 MB |
+(1 row)
+
+demo=#
 ```
 </details>
 
 <details><summary>• 5 раз обновить все строчки и добавить к каждой строчке любой символ</summary>
 
 ```shell
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+1');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+1');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+1');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+1');
+UPDATE 1000000
+demo=# UPDATE tmp_demo SET col1 = CONCAT(col1, '+1');
+UPDATE 1000000
+demo=# SELECT col1, xmin,xmax,cmin,cmax,ctid FROM tmp_demo LIMIT 5;
+                          col1                          |  xmin  | xmax | cmin | cmax | ctid
+--------------------------------------------------------+--------+------+------+------+-------
+ fb8a1e54e97c836370d3aa5fd9224f18+a+a+a+a+a+v+1+1+1+1+1 | 272130 |    0 |    0 |    0 | (0,1)
+ 780fdd1d8d8ab7d9ec3ecf1290b58569+a+a+a+a+a+v+1+1+1+1+1 | 272130 |    0 |    0 |    0 | (0,2)
+ 5e36b2dfaa1656aa6f826ba943c9c3d9+a+a+a+a+a+v+1+1+1+1+1 | 272130 |    0 |    0 |    0 | (0,3)
+ 37c45f2ed028c8a8eae2239d2f8df866+a+a+a+a+a+v+1+1+1+1+1 | 272130 |    0 |    0 |    0 | (0,4)
+ 0301ec805178fd25115a393d47d2146c+a+a+a+a+a+v+1+1+1+1+1 | 272130 |    0 |    0 |    0 | (0,5)
+(5 rows)
+
+demo=#
 ```
 </details>
 
 <details><summary>• Посмотреть размер файла с таблицей</summary>
-
+  
+  Файл таблицы слегка распух.
 ```shell
+  demo=# \dt+ tmp_demo
+                                      List of relations
+  Schema  |   Name   | Type  |  Owner   | Persistence | Access method |  Size  | Description
+----------+----------+-------+----------+-------------+---------------+--------+-------------
+ bookings | tmp_demo | table | postgres | permanent   | heap          | 388 MB |
+(1 row)
+
+demo=#
 ```
 </details>
 
 <details><summary>• Отключить Автовакуум на конкретной таблице</summary>
-
+  
+  Отключаю autovacuum на таблице tmp_demo.
 ```shell
+demo=# ALTER TABLE tmp_demo SET (autovacuum_enabled = false);
+ALTER TABLE
+demo=#
 ```
 </details>
 
