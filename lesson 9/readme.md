@@ -10,6 +10,48 @@
 <details><summary>• Настройте сервер так, чтобы в журнал сообщений сбрасывалась информация о блокировках, удерживаемых более 200 миллисекунд. Воспроизведите ситуацию, при которой в журнале появятся такие сообщения.</summary>
 
 ```shell
+demo=# SHOW log_lock_waits;         #логирование блокировок по тайм-ауту отключено
+ log_lock_waits
+----------------
+ off
+(1 row)
+  
+demo=# SHOW deadlock_timeout;       #по-умолчание в лог идут блокировки "висящие" более 1сек.
+ deadlock_timeout
+------------------
+ 1s
+(1 row)
+
+demo=# ALTER SYSTEM SET log_lock_waits = on;      #в настройках указываю активацию логирования блокировок
+ALTER SYSTEM
+demo=# SELECT pg_reload_conf();                   #применяю изменённую конфигурацию
+ pg_reload_conf
+----------------
+ t
+(1 row)
+
+demo=# SHOW log_lock_waits;                       #проверяю применение изменённых настроек
+ log_lock_waits
+----------------
+ on
+(1 row)
+
+demo=#  ALTER SYSTEM SET deadlock_timeout = 200;        #измению тайм-аут по истечении которого будут логироваться блокировки
+ALTER SYSTEM
+demo=# SELECT pg_reload_conf();                         #применяю изменённую конфигурацию
+ pg_reload_conf
+----------------
+ t
+(1 row)
+
+demo=# SHOW deadlock_timeout;                            #проверяю применение изменённых настроек
+ deadlock_timeout
+------------------
+ 200ms
+(1 row)
+
+demo=#
+
 
 ```
 </details>
