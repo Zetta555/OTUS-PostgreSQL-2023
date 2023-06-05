@@ -163,6 +163,7 @@ demo=# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FR
 <details><summary>• Воспроизведите взаимоблокировку трех транзакций. Можно ли разобраться в ситуации постфактум, изучая журнал сообщений?</summary>
   _
   Запускаю три транзакции в разных сессиях и закольцовываю блокировки.
+  
 ```sql
 demo=# SELECT * FROM tmp_demo_1;
  id | col
