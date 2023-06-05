@@ -94,9 +94,70 @@ demo=*#  UPDATE tmp_demo_1 SET col = 'col_1_1_1' WHERE id = 1;
 
 <details><summary>• Смоделируйте ситуацию обновления одной и той же строки тремя командами UPDATE в разных сеансах. Изучите возникшие блокировки в представлении pg_locks и убедитесь, что все они понятны. Пришлите список блокировок и объясните, что значит каждая.</summary>
 
+  Запустил транзакции в трёх сеансах.
+  
+  в первом:
 ```shell
+demo=# begin;
+BEGIN
+demo=*# UPDATE tmp_demo_1 SET col = 'col1' WHERE id = 1;
 
 ```
+  во втором:
+  ```shell
+demo=# begin;
+BEGIN
+demo=*# UPDATE tmp_demo_1 SET col = 'col11' WHERE id = 1;       #выполнение транзакции подвисло
+
+```
+  в третьем:
+  ```shell
+demo=# begin;
+BEGIN
+demo=*# UPDATE tmp_demo_1 SET col = 'col111' WHERE id = 1;       #выполнение транзакции подвисло
+
+```
+  Наблюдаю информацию о возникших блокировках:
+```shell
+demo=*# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FROM pg_locks WHERE relation = 'tmp_demo_1'::regclass;
+ locktype |       mode       | granted |  pid  | wait_for
+----------+------------------+---------+-------+----------
+ relation | RowExclusiveLock | t       | 31858 | {20956}
+ relation | RowExclusiveLock | t       | 20956 | {15156}
+ relation | RowExclusiveLock | t       | 15156 | {}
+ tuple    | ExclusiveLock    | f       | 31858 | {20956}
+ tuple    | ExclusiveLock    | t       | 20956 | {15156}
+(5 rows)
+
+demo=*#
+```
+Выполнение транзакции с pid 15156 прошло, не ожидает выполнения никаких других процессов.
+во второй сессии транзакция с pid 20956 ожидает выполнения транзакции с pid {15156} первой сессии.
+в третьей сессии транзакция с pid 31858 ожидает соответственно выполнения транцзакции с pid {20956} второй сессии.
+ 
+Делаю COMMIT в первой сессии и проверяю информацию о блокировках:
+  
+  ```shell
+demo=*# COMMIT;
+COMMIT
+demo=# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FROM pg_locks WHERE relation = 'tmp_demo_1'::regclass;
+ locktype |       mode       | granted |  pid  | wait_for
+----------+------------------+---------+-------+----------
+ relation | RowExclusiveLock | t       | 31858 | {20956}
+ relation | RowExclusiveLock | t       | 20956 | {}
+(2 rows)
+```
+  Во второй сессии транзакция с pid 20956 выполнилась(но не завершена), блокирует транзакцию c pid 31858 из третьей сессии.
+  Делаю COMMIT во второй сессии и проверяю информацию о блокировках:
+  ```shell
+demo=# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FROM pg_locks WHERE relation = 'tmp_demo_1'::regclass;
+ locktype |       mode       | granted |  pid  | wait_for
+----------+------------------+---------+-------+----------
+ relation | RowExclusiveLock | t       | 31858 | {}
+(1 row)
+
+```
+видно, что теперь выполнение транзакции в третьей сессии ничто не блокирует.
 </details>
 
 <details><summary>• Воспроизведите взаимоблокировку трех транзакций. Можно ли разобраться в ситуации постфактум, изучая журнал сообщений?</summary>
