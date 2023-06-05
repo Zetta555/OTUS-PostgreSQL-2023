@@ -9,7 +9,7 @@
 
 <details><summary>• Настройте сервер так, чтобы в журнал сообщений сбрасывалась информация о блокировках, удерживаемых более 200 миллисекунд. Воспроизведите ситуацию, при которой в журнале появятся такие сообщения.</summary>
 
-```shell
+```sql
 demo=# SHOW log_lock_waits;         #логирование блокировок по тайм-ауту отключено
  log_lock_waits
 ----------------
@@ -53,7 +53,7 @@ demo=# SHOW deadlock_timeout;                            #проверяю пр�
 demo=#
 ```
   В первой консоли выполняю:
-```shell
+```sql
 demo=# CREATE TABLE tmp_demo_1(id int, col text);
 CREATE TABLE
 demo=#  INSERT INTO tmp_demo_1(id, col) values (1, 'col_1');
@@ -71,7 +71,7 @@ UPDATE 1
 demo=*#
 ```
   Во второй:
-```shell
+```sql
 demo=# BEGIN;
 BEGIN
 demo=*#  UPDATE tmp_demo_1 SET col = 'col_1_1_1' WHERE id = 1;
@@ -79,7 +79,7 @@ demo=*#  UPDATE tmp_demo_1 SET col = 'col_1_1_1' WHERE id = 1;
 ```
 Выполнение транзакции подвисает.
 Делают COMMIT в первой консоли и во второй, проверяю лог
-  ```shell
+  ```sql
 2023-06-05 16:36:40.108 MSK [20956] postgres@demo LOG:  process 20956 still waiting for ShareLock on transaction 272185 after 201.239 ms
 2023-06-05 16:36:40.108 MSK [20956] postgres@demo DETAIL:  Process holding the lock: 15156. Wait queue: 20956.
 2023-06-05 16:36:40.108 MSK [20956] postgres@demo CONTEXT:  while updating tuple (0,1) in relation "tmp_demo_1"
@@ -97,28 +97,28 @@ demo=*#  UPDATE tmp_demo_1 SET col = 'col_1_1_1' WHERE id = 1;
   Запустил транзакции в трёх сеансах.
   
   в первом:
-```shell
+```sql
 demo=# begin;
 BEGIN
 demo=*# UPDATE tmp_demo_1 SET col = 'col1' WHERE id = 1;
 
 ```
   во втором:
-  ```shell
+  ```sql
 demo=# begin;
 BEGIN
 demo=*# UPDATE tmp_demo_1 SET col = 'col11' WHERE id = 1;       #выполнение транзакции подвисло
 
 ```
   в третьем:
-  ```shell
+  ```sql
 demo=# begin;
 BEGIN
 demo=*# UPDATE tmp_demo_1 SET col = 'col111' WHERE id = 1;       #выполнение транзакции подвисло
 
 ```
   Наблюдаю информацию о возникших блокировках:
-```shell
+```sql
 demo=*# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FROM pg_locks WHERE relation = 'tmp_demo_1'::regclass;
  locktype |       mode       | granted |  pid  | wait_for
 ----------+------------------+---------+-------+----------
@@ -137,7 +137,7 @@ demo=*#
  
 Делаю COMMIT в первой сессии и проверяю информацию о блокировках:
   
-  ```shell
+  ```sql
 demo=*# COMMIT;
 COMMIT
 demo=# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FROM pg_locks WHERE relation = 'tmp_demo_1'::regclass;
@@ -149,7 +149,7 @@ demo=# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FR
 ```
   Во второй сессии транзакция с pid 20956 выполнилась(но не завершена), блокирует транзакцию c pid 31858 из третьей сессии.
   Делаю COMMIT во второй сессии и проверяю информацию о блокировках:
-  ```shell
+  ```sql
 demo=# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FROM pg_locks WHERE relation = 'tmp_demo_1'::regclass;
  locktype |       mode       | granted |  pid  | wait_for
 ----------+------------------+---------+-------+----------
@@ -162,14 +162,14 @@ demo=# SELECT locktype, mode, granted, pid, pg_blocking_pids(pid) AS wait_for FR
 
 <details><summary>• Воспроизведите взаимоблокировку трех транзакций. Можно ли разобраться в ситуации постфактум, изучая журнал сообщений?</summary>
 
-```shell
+```sql
 
 ```
 </details>
 
 <details><summary>• Могут ли две транзакции, выполняющие единственную команду UPDATE одной и той же таблицы (без where), заблокировать друг друга?</summary>
 
-```shell
+```sql
 
 ```
 </details>
