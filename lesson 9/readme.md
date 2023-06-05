@@ -51,9 +51,45 @@ demo=# SHOW deadlock_timeout;                            #проверяю пр�
 (1 row)
 
 demo=#
+```
+  В первой консоли выполняю:
+```shell
+demo=# CREATE TABLE tmp_demo_1(id int, col text);
+CREATE TABLE
+demo=#  INSERT INTO tmp_demo_1(id, col) values (1, 'col_1');
+INSERT 0 1
+demo=# SELECT * FROM tmp_demo_1;
+ id |  col
+----+-------
+  1 | col_1
+(1 row)
 
+demo=# begin;
+BEGIN
+demo=*#  UPDATE tmp_demo_1 SET col = 'col_1_1' WHERE id = 1;
+UPDATE 1
+demo=*#
+```
+  Во второй:
+```shell
+demo=# BEGIN;
+BEGIN
+demo=*#  UPDATE tmp_demo_1 SET col = 'col_1_1_1' WHERE id = 1;
 
 ```
+Выполнение транзакции подвисает.
+Делают COMMIT в первой консоли и во второй, проверяю лог
+  ```shell
+2023-06-05 16:36:40.108 MSK [20956] postgres@demo LOG:  process 20956 still waiting for ShareLock on transaction 272185 after 201.239 ms
+2023-06-05 16:36:40.108 MSK [20956] postgres@demo DETAIL:  Process holding the lock: 15156. Wait queue: 20956.
+2023-06-05 16:36:40.108 MSK [20956] postgres@demo CONTEXT:  while updating tuple (0,1) in relation "tmp_demo_1"
+2023-06-05 16:36:40.108 MSK [20956] postgres@demo STATEMENT:  UPDATE tmp_demo_1 SET col = 'col_1_1_1' WHERE id = 1;
+2023-06-05 16:36:54.027 MSK [20956] postgres@demo LOG:  process 20956 acquired ShareLock on transaction 272185 after 14121.135 ms
+2023-06-05 16:36:54.027 MSK [20956] postgres@demo CONTEXT:  while updating tuple (0,1) in relation "tmp_demo_1"
+2023-06-05 16:36:54.027 MSK [20956] postgres@demo STATEMENT:  UPDATE tmp_demo_1 SET col = 'col_1_1_1' WHERE id = 1;
+
+```
+  В логе наблюдаю сообщение о возникшей блокировке ShareLock
 </details>
 
 <details><summary>• Смоделируйте ситуацию обновления одной и той же строки тремя командами UPDATE в разных сеансах. Изучите возникшие блокировки в представлении pg_locks и убедитесь, что все они понятны. Пришлите список блокировок и объясните, что значит каждая.</summary>
