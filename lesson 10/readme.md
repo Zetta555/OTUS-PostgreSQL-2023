@@ -290,7 +290,32 @@ performing post-bootstrap initialization ... ok
 syncing data to disk ... ok
 Ver Cluster Port Status Owner    Data directory               Log file
 15  main1   5433 down   postgres /var/lib/postgresql/15/main1 /var/log/postgresql/postgresql-15-main1.log
+zetta55@ubuntu-vm2:~$ sudo pg_ctlcluster 15 main1 start
+zetta55@ubuntu-vm2:~$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory               Log file
+15  main    5432 online postgres /mnt/10G/15/main             /var/log/postgresql/postgresql-15-main.log
+15  main1   5433 online postgres /var/lib/postgresql/15/main1 /var/log/postgresql/postgresql-15-main1.log
 zetta55@ubuntu-vm2:~$
+zetta55@ubuntu-vm2:~$ sudo -u postgres psql -p 5433
+could not change directory to "/home/zetta55": Permission denied
+psql (15.3 (Ubuntu 15.3-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=# show data_directory;
+        data_directory
+------------------------------
+ /var/lib/postgresql/15/main1
+(1 row)
+
+postgres=# \c postgres
+You are now connected to database "postgres" as user "postgres".
+postgres=# SHOW data_checksums;
+ data_checksums
+----------------
+ on
+(1 row)
+
+postgres=#
 
   
 ```
