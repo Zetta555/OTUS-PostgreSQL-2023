@@ -252,5 +252,47 @@ postgres@ubuntu-vm2:/home/zetta55$
 
 </details>
 <details><summary>6. Создайте новый кластер с включенной контрольной суммой страниц. Создайте таблицу. Вставьте несколько значений. Выключите кластер. Измените пару байт в таблице. Включите кластер и сделайте выборку из таблицы. Что и почему произошло? как проигнорировать ошибку и продолжить работу?</summary>
+  
+```shell
+zetta55@ubuntu-vm2:~$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory   Log file
+15  main    5432 online postgres /mnt/10G/15/main /var/log/postgresql/postgresql-15-main.log
+zetta55@ubuntu-vm2:~$
+
+zetta55@ubuntu-vm2:~$ sudo pg_createcluster 15 main1 -- --data-checksums
+Creating new PostgreSQL cluster 15/main1 ...
+/usr/lib/postgresql/15/bin/initdb -D /var/lib/postgresql/15/main1 --auth-local peer --auth-host scram-sha-256 --no-instructions --data-checksums
+The files belonging to this database system will be owned by user "postgres".
+This user must also own the server process.
+
+The database cluster will be initialized with this locale configuration:
+  provider:    libc
+  LC_COLLATE:  en_US.UTF-8
+  LC_CTYPE:    en_US.UTF-8
+  LC_MESSAGES: en_US.UTF-8
+  LC_MONETARY: ru_RU.UTF-8
+  LC_NUMERIC:  ru_RU.UTF-8
+  LC_TIME:     ru_RU.UTF-8
+The default database encoding has accordingly been set to "UTF8".
+The default text search configuration will be set to "english".
+
+Data page checksums are enabled.
+
+fixing permissions on existing directory /var/lib/postgresql/15/main1 ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... Europe/Moscow
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+Ver Cluster Port Status Owner    Data directory               Log file
+15  main1   5433 down   postgres /var/lib/postgresql/15/main1 /var/log/postgresql/postgresql-15-main1.log
+zetta55@ubuntu-vm2:~$
+
+  
+```
   </details>
 
