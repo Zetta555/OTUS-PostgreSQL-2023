@@ -316,8 +316,58 @@ postgres=# SHOW data_checksums;
 (1 row)
 
 postgres=#
+postgres=# CREATE DATABASE demo1;
+CREATE DATABASE
+postgres=# \c demo1;
+You are now connected to database "demo1" as user "postgres".
+demo1=# CREATE TABLE my_frends (id int, name text);
+CREATE TABLE
+demo1=# \dt+
+                                       List of relations
+ Schema |   Name    | Type  |  Owner   | Persistence | Access method |    Size    | Description
+--------+-----------+-------+----------+-------------+---------------+------------+-------------
+ public | my_frends | table | postgres | permanent   | heap          | 8192 bytes |
+(1 row)
 
-  
+demo1=# SELECT * FROM my_frends;
+ id | name
+----+------
+(0 rows)
+
+demo1=# INSERT INTO my_frends (id, name) VALUES (1, 'Chip'), (2, 'Dale');
+INSERT 0 2
+demo1=# SELECT * FROM my_frends;
+ id | name
+----+------
+  1 | Chip
+  2 | Dale
+(2 rows)
+
+demo1=# \dt+
+                                     List of relations
+ Schema |   Name    | Type  |  Owner   | Persistence | Access method | Size  | Description
+--------+-----------+-------+----------+-------------+---------------+-------+-------------
+ public | my_frends | table | postgres | permanent   | heap          | 16 kB |
+(1 row)
+
+demo1=# SELECT pg_relation_filepath('my_frends');
+ pg_relation_filepath
+----------------------
+ base/16388/16389
+(1 row)
+
+demo1=# \q
+```
+```shell
+zetta55@ubuntu-vm2:~$ sudo pg_ctlcluster 15 main1 stop
+[sudo] password for zetta55:
+zetta55@ubuntu-vm2:~$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory               Log file
+15  main    5432 online postgres /mnt/10G/15/main             /var/log/postgresql/postgresql-15-main.log
+15  main1   5433 down   postgres /var/lib/postgresql/15/main1 /var/log/postgresql/postgresql-15-main1.log
+zetta55@ubuntu-vm2:~$
+
+
 ```
   </details>
 
