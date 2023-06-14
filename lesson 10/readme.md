@@ -195,8 +195,61 @@ zetta55@ubuntu-vm2:~$
 <details><summary>5. Сравните tps в синхронном/асинхронном режиме утилитой pgbench. Объясните полученный результат.</summary>
 
 
-```shell
+```sql
+demo=# SHOW synchronous_commit;
+ synchronous_commit
+--------------------
+ on
+(1 row)
+
+demo=# ALTER SYSTEM SET synchronous_commit = off;
+ALTER SYSTEM
+demo=# SELECT pg_reload_conf();
+ pg_reload_conf
+----------------
+ t
+(1 row)
+
+demo=# SHOW synchronous_commit;
+ synchronous_commit
+--------------------
+ off
+(1 row)
+
+demo=#
 ```
+```shell
+zetta55@ubuntu-vm2:~$ sudo su postgres
+postgres@ubuntu-vm2:/home/zetta55$ pgbench -P 60 -T 600 demo
+pgbench (15.3 (Ubuntu 15.3-1.pgdg22.04+1))
+starting vacuum...end.
+progress: 60.0 s, 665.6 tps, lat 1.502 ms stddev 0.432, 0 failed
+progress: 120.0 s, 672.9 tps, lat 1.486 ms stddev 0.477, 0 failed
+progress: 180.0 s, 690.0 tps, lat 1.449 ms stddev 0.499, 0 failed
+progress: 240.0 s, 685.2 tps, lat 1.459 ms stddev 0.515, 0 failed
+progress: 300.0 s, 681.8 tps, lat 1.466 ms stddev 0.468, 0 failed
+progress: 360.0 s, 671.5 tps, lat 1.489 ms stddev 0.530, 0 failed
+progress: 420.0 s, 685.9 tps, lat 1.458 ms stddev 0.489, 0 failed
+progress: 480.0 s, 716.4 tps, lat 1.395 ms stddev 0.471, 0 failed
+progress: 540.0 s, 696.5 tps, lat 1.436 ms stddev 0.450, 0 failed
+progress: 600.0 s, 694.7 tps, lat 1.439 ms stddev 0.439, 0 failed
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+maximum number of tries: 1
+duration: 600 s
+number of transactions actually processed: 411632
+number of failed transactions: 0 (0.000%)
+latency average = 1.457 ms
+latency stddev = 0.479 ms
+initial connection time = 1.659 ms
+tps = 686.052986 (without initial connection time)
+postgres@ubuntu-vm2:/home/zetta55$
+
+```
+
 </details>
 <details><summary>6. Создайте новый кластер с включенной контрольной суммой страниц. Создайте таблицу. Вставьте несколько значений. Выключите кластер. Измените пару байт в таблице. Включите кластер и сделайте выборку из таблицы. Что и почему произошло? как проигнорировать ошибку и продолжить работу?</summary>
   </details>
