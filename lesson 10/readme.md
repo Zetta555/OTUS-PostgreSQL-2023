@@ -367,15 +367,51 @@ Ver Cluster Port Status Owner    Data directory               Log file
 15  main1   5433 down   postgres /var/lib/postgresql/15/main1 /var/log/postgresql/postgresql-15-main1.log
 zetta55@ubuntu-vm2:~$
 
-postgres@ubuntu-vm2:~/15/main1/base/16388$ dd if=/dev/random of=/var/lib/postgresql/15/main1/base/16388/16389 oflag=append conv=notrunc bs=1 count=1
-1+0 records in
-1+0 records out
-1 byte copied, 0,000126329 s, 7,9 kB/s
+ppostgres@ubuntu-vm2:~/15/main1/base/16388$ dd if=/dev/zero of=/var/lib/postgresql/15/main1/base/16388/16389 oflag=dsync conv=notrunc bs=1 count=8
+8+0 records in
+8+0 records out
+8 bytes copied, 0,00606197 s, 1,3 kB/s
+postgres@ubuntu-vm2:~/15/main1/base/16388$ ls -la 16389
+-rw------- 1 postgres postgres 8192 июн 15 23:43 16389
 postgres@ubuntu-vm2:~/15/main1/base/16388$
-postgres@ubuntu-vm2:~/15/main1/base/16388$ ls -la /var/lib/postgresql/15/main1/base/16388/16389
--rw------- 1 postgres postgres 8193 июн 15 22:47 /var/lib/postgresql/15/main1/base/16388/16389
 postgres@ubuntu-vm2:~/15/main1/base/16388$
+exit
+zetta55@ubuntu-vm2:~$ sudo pg_ctlcluster 15 main1 start
+zetta55@ubuntu-vm2:~$ pg_lsclusters
+Ver Cluster Port Status Owner    Data directory               Log file
+15  main    5432 online postgres /mnt/10G/15/main             /var/log/postgresql/postgresql-15-main.log
+15  main1   5433 online postgres /var/lib/postgresql/15/main1 /var/log/postgresql/postgresql-15-main1.log
+zetta55@ubuntu-vm2:~$ sudo -u postgres psql -p 5433 demo1
+could not change directory to "/home/zetta55": Permission denied
+psql (15.3 (Ubuntu 15.3-1.pgdg22.04+1))
+Type "help" for help.
+
+demo1=# SELECT * FROM my_frends;
+WARNING:  page verification failed, calculated checksum 22553 but expected 30898
+ERROR:  invalid page in block 0 of relation base/16388/16389
+demo1=# SHOW ignore_checksum_failure;
+ ignore_checksum_failure
+-------------------------
+ off
+(1 row)
+
+demo1=# SET ignore_checksum_failure = on;
+SET
+demo1=# SHOW ignore_checksum_failure;
+ ignore_checksum_failure
+-------------------------
+ on
+(1 row)
+
+demo1=# SELECT * FROM my_frends;
+WARNING:  page verification failed, calculated checksum 22553 but expected 30898
+ id | name
+----+------
+  1 | Chip
+  2 | Dale
+(2 rows)
+
 ```
-Добавил 1байт в конец файла таблицы.
+
   </details>
 
