@@ -367,7 +367,15 @@ Ver Cluster Port Status Owner    Data directory               Log file
 15  main1   5433 down   postgres /var/lib/postgresql/15/main1 /var/log/postgresql/postgresql-15-main1.log
 zetta55@ubuntu-vm2:~$
 
-
+postgres@ubuntu-vm2:~/15/main1/base/16388$ dd if=/dev/random of=/var/lib/postgresql/15/main1/base/16388/16389 oflag=append conv=notrunc bs=1 count=1
+1+0 records in
+1+0 records out
+1 byte copied, 0,000126329 s, 7,9 kB/s
+postgres@ubuntu-vm2:~/15/main1/base/16388$
+postgres@ubuntu-vm2:~/15/main1/base/16388$ ls -la /var/lib/postgresql/15/main1/base/16388/16389
+-rw------- 1 postgres postgres 8193 июн 15 22:47 /var/lib/postgresql/15/main1/base/16388/16389
+postgres@ubuntu-vm2:~/15/main1/base/16388$
 ```
+Добавил 1байт в конец файла таблицы.
   </details>
 
