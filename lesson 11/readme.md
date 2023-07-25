@@ -18,7 +18,7 @@
   </details>
 <details><summary>• настроить кластер PostgreSQL 15 на максимальную производительность не обращая внимание на возможные проблемы с надежностью в случае аварийной перезагрузки виртуальной машины</summary>
   </details>
-<details><summary>• нагрузить кластер через утилиту через утилиту pgbench (https://postgrespro.ru/docs/postgrespro/14/pgbench)</summary>
+<details><summary>• нагрузить кластер через утилиту pgbench (https://postgrespro.ru/docs/postgrespro/14/pgbench)</summary>
   </details>
 <details><summary>• написать какого значения tps удалось достичь, показать какие параметры в какие значения устанавливали и почему</summary>
   </details>
